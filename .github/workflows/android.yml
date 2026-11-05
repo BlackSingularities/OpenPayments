@@ -1,0 +1,105 @@
+name: Android
+# Budowanie i wydanie wyłącznie po wypchnięciu tagu wersji (np. v1.2.3).
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+concurrency:
+  group: android-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Testy, lint i build debug
+        run: |
+          chmod +x gradlew
+          ./gradlew testDebugUnitTest lintDebug assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: debug-apk-and-reports
+          path: |
+            app/build/outputs/apk/debug/*.apk
+            app/build/reports/
+
+  # Wydanie tylko po wypchnięciu tagu vX.Y.Z (np. git tag v1.0.1 && git push origin v1.0.1).
+  # Tag musi zgadzać się z plikiem VERSION. versionCode rośnie z każdym przebiegiem.
+  release:
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Wersja
+        id: ver
+        run: |
+          NAME="${GITHUB_REF_NAME#v}"
+          BASE=$(tr -d '[:space:]' < VERSION)
+          if ! echo "$NAME" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then echo "::error::Tag $GITHUB_REF_NAME nie ma postaci vX.Y.Z"; exit 1; fi
+          if [ "$NAME" != "$BASE" ]; then echo "::error::Tag $GITHUB_REF_NAME nie zgadza się z plikiem VERSION ($BASE)"; exit 1; fi
+          echo "name=$NAME" >> "$GITHUB_OUTPUT"
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          echo "code=$(( ${{ github.run_number }} + 100 ))" >> "$GITHUB_OUTPUT"
+      - name: Klucz podpisu
+        env:
+          SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+        run: |
+          if [ -z "$SIGNING_KEY" ]; then echo "::error::Brak sekretu SIGNING_KEY – wydanie nie może być podpisane"; exit 1; fi
+          echo "$SIGNING_KEY" | base64 --decode > "$RUNNER_TEMP/release.jks"
+      - name: Podpisany APK
+        env:
+          SIGNING_KEY_PATH: ${{ runner.temp }}/release.jks
+          SIGNING_STORE_PASSWORD: ${{ secrets.SIGNING_STORE_PASSWORD }}
+          SIGNING_KEY_PASSWORD: ${{ secrets.SIGNING_KEY_PASSWORD }}
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease -PversionName=${{ steps.ver.outputs.name }} -PversionCode=${{ steps.ver.outputs.code }}
+          cp app/build/outputs/apk/release/app-release.apk OpenPayments.apk
+          sha256sum OpenPayments.apk > OpenPayments.apk.sha256
+      - name: Weryfikacja podpisu
+        run: |
+          # Wydanie musi być podpisane tym samym certyfikatem co poprzednie – inaczej aktualizacje na telefonach się nie zainstalują.
+          EXPECTED=$(grep -oP 'releaseCertSha256 = "\K[0-9a-f]{64}' app/build.gradle.kts)
+          APKSIGNER=$(ls -d "$ANDROID_HOME"/build-tools/*/ | sort -V | tail -1)apksigner
+          "$APKSIGNER" verify --verbose --print-certs OpenPayments.apk | tee signature.txt
+          ACTUAL=$(grep -m1 -E 'Signer.*certificate SHA-256 digest' signature.txt | awk '{print $NF}')
+          if [ "$ACTUAL" != "$EXPECTED" ]; then echo "::error::Certyfikat APK ($ACTUAL) różni się od oczekiwanego ($EXPECTED)"; exit 1; fi
+          grep -q 'Verified using v2 scheme (APK Signature Scheme v2): true' signature.txt
+      - name: Publikacja wydania
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NAME: ${{ steps.ver.outputs.name }}
+          BASE: ${{ steps.ver.outputs.base }}
+        run: |
+          NOTES=$(awk -v v="$BASE" '$0 == "## " v { f=1; next } f && /^## / { exit } f { print }' CHANGELOG.md)
+          if [ "$NAME" != "$BASE" ]; then NOTES=$(printf 'Poprawki i ulepszenia:\n\n%s' "$(git log -8 --pretty='- %s' "$GITHUB_SHA")"); fi
+          FOOTER=$(printf -- '---\n**Instalacja:** pobierz **OpenPayments.apk** (Android 8+). Zainstalowana aplikacja zaktualizuje się sama.\n\nCertyfikat podpisu SHA-256: `%s`' "$(grep -oP 'releaseCertSha256 = "\K[0-9a-f]{64}' app/build.gradle.kts)")
+          gh release create "v$NAME" OpenPayments.apk OpenPayments.apk.sha256 --target "$GITHUB_SHA" --title "OpenPayments $NAME" --notes "$(printf '%s\n\n%s' "$NOTES" "$FOOTER")" --latest
+      - name: Usunięcie klucza
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
