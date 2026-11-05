@@ -39,7 +39,8 @@ class MainActivity : FragmentActivity() {
         if (Build.VERSION.SDK_INT >= 33) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
         setContent {
             val theme by vm.theme.collectAsState()
-            OpenPaymentsTheme(theme) {
+            val dynamic by vm.dynamicColor.collectAsState()
+            OpenPaymentsTheme(theme, dynamic) {
                 if (locked) LockScreen(::authenticate) else AppRoot(vm, ::canAuthenticate)
             }
         }

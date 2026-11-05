@@ -1,32 +1,34 @@
 package pl.openpayments.ui.screens
 
-import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
-import androidx.compose.foundation.background
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import pl.openpayments.domain.formatDay
 import pl.openpayments.domain.formatMoney
 import pl.openpayments.ui.MainViewModel
 import pl.openpayments.ui.Nav
 import pl.openpayments.ui.components.EmptyState
-import pl.openpayments.ui.components.TransactionRow
+import pl.openpayments.ui.components.ExpressiveScaffold
+import pl.openpayments.ui.components.TransactionItem
 
 private enum class Kind(val label: String) { ALL("Wszystkie"), OUT("Wydatki"), IN("Przychody") }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun TransactionsScreen(vm: MainViewModel, nav: Nav) {
     val all by vm.transactions.collectAsState()
@@ -44,25 +46,35 @@ fun TransactionsScreen(vm: MainViewModel, nav: Nav) {
         }
     }
     val grouped = remember(filtered) { filtered.groupBy { it.date } }
+    val totalOut = filtered.filter { !it.isIncome }.sumOf { it.amount }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Transakcje", style = MaterialTheme.typography.headlineSmall) }) },
+    ExpressiveScaffold(
+        title = "Transakcje",
+        subtitle = if (filtered.isEmpty()) null else "${filtered.size} pozycji · wydatki ${formatMoney(totalOut, true)}",
     ) { pad ->
-        LazyColumn(Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(bottom = 24.dp)) {
+        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = 32.dp)) {
             item {
-                OutlinedTextField(
-                    query, { query = it }, Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                TextField(
+                    query, { query = it },
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(56.dp),
                     placeholder = { Text("Szukaj sprzedawcy lub notatki") },
-                    leadingIcon = { Icon(Icons.Filled.Search, null) }, singleLine = true,
-                    shape = MaterialTheme.shapes.large,
+                    leadingIcon = { Icon(Icons.Filled.Search, null) },
+                    trailingIcon = { if (query.isNotEmpty()) IconButton(onClick = { query = "" }) { Icon(Icons.Filled.Close, "Wyczyść") } },
+                    singleLine = true, shape = CircleShape,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                        focusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                        unfocusedIndicatorColor = androidx.compose.ui.graphics.Color.Transparent,
+                    ),
                 )
             }
             item {
                 LazyRow(contentPadding = PaddingValues(16.dp, 12.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    items(Kind.entries) { k -> FilterChip(kind == k, { kind = k }, { Text(k.label) }) }
-                    item { VerticalDivider(Modifier.height(32.dp)) }
+                    items(Kind.entries) { k -> FilterChip(kind == k, { kind = k }, { Text(k.label) }, shape = CircleShape) }
+                    item { VerticalDivider(Modifier.height(32.dp).padding(horizontal = 4.dp)) }
                     items(cats.filter { kind == Kind.ALL || it.isIncome == (kind == Kind.IN) }) { c ->
-                        FilterChip(catFilter == c.id, { catFilter = if (catFilter == c.id) null else c.id }, { Text(c.name) })
+                        FilterChip(catFilter == c.id, { catFilter = if (catFilter == c.id) null else c.id }, { Text(c.name) }, shape = CircleShape)
                     }
                 }
             }
@@ -71,36 +83,34 @@ fun TransactionsScreen(vm: MainViewModel, nav: Nav) {
             }
             grouped.forEach { (day, list) ->
                 stickyHeader(key = "h$day") {
-                    Surface(color = MaterialTheme.colorScheme.background) {
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
-                            Text(formatDay(day), style = MaterialTheme.typography.labelLarge, modifier = Modifier.weight(1f),
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Surface(color = MaterialTheme.colorScheme.surface) {
+                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 8.dp)) {
+                            Text(formatDay(day), style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary, modifier = Modifier.weight(1f))
                             val out = list.filter { !it.isIncome }.sumOf { it.amount }
                             if (out > 0) Text("−" + formatMoney(out), style = MaterialTheme.typography.labelLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
-                items(list, key = { it.id }) { t ->
+                itemsIndexed(list, key = { _, t -> t.id }) { i, t ->
                     val state = rememberSwipeToDismissBoxState()
                     LaunchedEffect(state.currentValue) {
                         if (state.currentValue == SwipeToDismissBoxValue.EndToStart) vm.deleteTransaction(t)
                     }
+                    val shapes = ListItemDefaults.segmentedShapes(i, list.size)
                     SwipeToDismissBox(
-                        state = state, modifier = Modifier.padding(horizontal = 12.dp).animateItem(),
+                        state = state,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 1.dp).animateItem(),
                         enableDismissFromStartToEnd = false,
                         backgroundContent = {
                             Box(
-                                Modifier.fillMaxSize().clip(MaterialTheme.shapes.medium)
-                                    .background(MaterialTheme.colorScheme.errorContainer).padding(horizontal = 20.dp),
+                                Modifier.fillMaxSize().clip(shapes.shape).background(MaterialTheme.colorScheme.errorContainer)
+                                    .padding(horizontal = 24.dp),
                                 contentAlignment = Alignment.CenterEnd,
                             ) { Icon(Icons.Filled.DeleteOutline, "Usuń", tint = MaterialTheme.colorScheme.onErrorContainer) }
                         },
-                    ) {
-                        Surface(color = MaterialTheme.colorScheme.background) {
-                            TransactionRow(t, catMap[t.categoryId]) { nav.edit(t.id) }
-                        }
-                    }
+                    ) { TransactionItem(t, catMap[t.categoryId], shapes) { nav.edit(t.id) } }
                 }
             }
         }

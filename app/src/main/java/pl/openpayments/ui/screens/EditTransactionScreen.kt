@@ -8,6 +8,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Notes
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -34,8 +35,9 @@ import pl.openpayments.domain.*
 import pl.openpayments.ui.MainViewModel
 import pl.openpayments.ui.Nav
 import pl.openpayments.ui.components.CategoryPicker
+import pl.openpayments.ui.components.ConnectedToggleGroup
+import pl.openpayments.ui.components.filledFieldColors
 import pl.openpayments.ui.components.SectionCard
-import pl.openpayments.ui.theme.Display
 import java.io.File
 import java.time.Instant
 import java.time.ZoneOffset
@@ -122,19 +124,32 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
         topBar = {
             TopAppBar(
                 title = { Text(when { original != null -> "Edycja"; fromReceipt -> "Sprawdź paragon"; isIncome -> "Nowy przychód"; else -> "Nowy wydatek" }) },
-                navigationIcon = { IconButton(onClick = { nav.back() }) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Wstecz") } },
-                actions = {
-                    if (original != null) IconButton(onClick = { confirmDelete = true }) { Icon(Icons.Filled.DeleteOutline, "Usuń") }
+                navigationIcon = {
+                    FilledTonalIconButton(onClick = { nav.back() }, Modifier.padding(start = 4.dp)) { Icon(Icons.Filled.Close, "Zamknij") }
                 },
+                actions = {
+                    if (original != null) FilledTonalIconButton(
+                        onClick = { confirmDelete = true },
+                        colors = IconButtonDefaults.filledTonalIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer,
+                            contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                        ),
+                    ) { Icon(Icons.Filled.DeleteOutline, "Usuń") }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
             )
         },
         bottomBar = {
-            Surface(color = MaterialTheme.colorScheme.background) {
+            Surface(color = MaterialTheme.colorScheme.surface) {
                 Button(
                     onClick = ::save, modifier = Modifier.fillMaxWidth().navigationBarsPadding().imePadding()
-                        .padding(16.dp).height(54.dp),
-                    shape = MaterialTheme.shapes.large,
-                ) { Text(if (fromReceipt) "Zatwierdź transakcję" else "Zapisz", style = MaterialTheme.typography.titleMedium) }
+                        .padding(16.dp).height(64.dp),
+                    shapes = ButtonDefaults.shapes(),
+                ) {
+                    Icon(Icons.Filled.Check, null)
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (fromReceipt) "Zatwierdź transakcję" else "Zapisz", style = MaterialTheme.typography.titleMedium)
+                }
             }
         },
     ) { pad ->
@@ -143,44 +158,46 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (original == null && !fromReceipt) {
-                SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                    SegmentedButton(!isIncome, { isIncome = false; categoryId = null; userPickedCategory = false }, SegmentedButtonDefaults.itemShape(0, 2)) { Text("Wydatek") }
-                    SegmentedButton(isIncome, { isIncome = true; categoryId = null; userPickedCategory = false }, SegmentedButtonDefaults.itemShape(1, 2)) { Text("Przychód") }
+                ConnectedToggleGroup(listOf(false to "Wydatek", true to "Przychód"), isIncome) {
+                    if (it != isIncome) { isIncome = it; categoryId = null; userPickedCategory = false }
                 }
             }
 
             // Duże pole kwoty
-            Column(Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Kwota", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = amount, onValueChange = { v -> amount = v.filter { it.isDigit() || it == ',' || it == '.' }.take(10); error = null },
-                        textStyle = TextStyle(fontFamily = Display, fontSize = 46.sp, fontWeight = FontWeight.SemiBold,
-                            color = MaterialTheme.colorScheme.onSurface, textAlign = TextAlign.End),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                        singleLine = true,
-                        cursorBrush = androidx.compose.ui.graphics.SolidColor(MaterialTheme.colorScheme.primary),
-                        modifier = Modifier.width(IntrinsicSize.Min).widthIn(min = 60.dp),
-                        decorationBox = { inner ->
-                            Box(contentAlignment = Alignment.CenterEnd) {
-                                if (amount.isEmpty()) Text("0,00", style = TextStyle(fontFamily = Display, fontSize = 46.sp,
-                                    color = MaterialTheme.colorScheme.outline))
-                                inner()
-                            }
-                        },
-                    )
-                    Text(" zł", style = TextStyle(fontFamily = Display, fontSize = 30.sp), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            Column(
+                Modifier.fillMaxWidth().clip(MaterialTheme.shapes.extraLarge)
+                    .background(if (isIncome) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.primaryContainer)
+                    .padding(vertical = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Text("Kwota", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onPrimaryContainer)
+                val onContainer = MaterialTheme.colorScheme.onPrimaryContainer
+                androidx.compose.foundation.text.BasicTextField(
+                    value = amount, onValueChange = { v -> amount = v.filter { it.isDigit() || it == ',' || it == '.' }.take(10); error = null },
+                    textStyle = TextStyle(fontSize = 52.sp, fontWeight = FontWeight.Bold, color = onContainer, textAlign = TextAlign.Center),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    singleLine = true,
+                    cursorBrush = androidx.compose.ui.graphics.SolidColor(onContainer),
+                    visualTransformation = CurrencySuffix,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    decorationBox = { inner ->
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            if (amount.isEmpty()) Text("0,00 zł", style = TextStyle(fontSize = 52.sp, fontWeight = FontWeight.Bold,
+                                color = onContainer.copy(alpha = 0.35f)))
+                            inner()
+                        }
+                    },
+                )
                 error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
             }
 
-            OutlinedTextField(
+            TextField(
                 merchant, { merchant = it; error = null }, Modifier.fillMaxWidth(),
                 label = { Text(if (isIncome) "Źródło (np. pracodawca)" else "Sprzedawca / sklep") },
-                leadingIcon = { Icon(Icons.Filled.Storefront, null) }, singleLine = true, shape = MaterialTheme.shapes.medium,
+                leadingIcon = { Icon(Icons.Filled.Storefront, null) }, singleLine = true, shape = MaterialTheme.shapes.large, colors = filledFieldColors(),
             )
-            OutlinedCard(onClick = { showDate = true }, shape = MaterialTheme.shapes.medium, modifier = Modifier.fillMaxWidth()) {
-                Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Surface(onClick = { showDate = true }, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerHigh, modifier = Modifier.fillMaxWidth()) {
+                Row(Modifier.padding(18.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.CalendarMonth, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Spacer(Modifier.width(12.dp))
                     Text(formatDay(date), style = MaterialTheme.typography.bodyLarge)
@@ -200,9 +217,9 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
                 CategoryPicker(visibleCats, categoryId) { categoryId = it; userPickedCategory = true }
             }
 
-            OutlinedTextField(
+            TextField(
                 note, { note = it }, Modifier.fillMaxWidth(), label = { Text("Notatka (opcjonalnie)") },
-                leadingIcon = { Icon(Icons.Filled.Notes, null) }, shape = MaterialTheme.shapes.medium,
+                leadingIcon = { Icon(Icons.AutoMirrored.Filled.Notes, null) }, shape = MaterialTheme.shapes.large, colors = filledFieldColors(),
             )
 
             if (image != null) {
@@ -294,5 +311,18 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
             },
             dismissButton = { TextButton(onClick = { confirmDelete = false }) { Text("Anuluj") } },
         )
+    }
+}
+
+/** Dokleja " zł" do wyświetlanej kwoty (kursor nie wchodzi w dopisek). */
+private object CurrencySuffix : androidx.compose.ui.text.input.VisualTransformation {
+    override fun filter(text: androidx.compose.ui.text.AnnotatedString): androidx.compose.ui.text.input.TransformedText {
+        if (text.isEmpty()) return androidx.compose.ui.text.input.TransformedText(text, androidx.compose.ui.text.input.OffsetMapping.Identity)
+        val out = androidx.compose.ui.text.AnnotatedString(text.text + " zł")
+        val len = text.length
+        return androidx.compose.ui.text.input.TransformedText(out, object : androidx.compose.ui.text.input.OffsetMapping {
+            override fun originalToTransformed(offset: Int) = offset
+            override fun transformedToOriginal(offset: Int) = offset.coerceAtMost(len)
+        })
     }
 }

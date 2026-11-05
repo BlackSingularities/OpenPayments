@@ -1,6 +1,10 @@
 package pl.openpayments.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -44,8 +48,9 @@ fun SubscriptionsScreen(vm: MainViewModel) {
         when (it.cycle) { Cycle.WEEKLY -> it.amount * 52 / 12; Cycle.MONTHLY -> it.amount; Cycle.YEARLY -> it.amount / 12 }
     }
 
-    Scaffold(
-        topBar = { TopAppBar(title = { Text("Płatności cykliczne", style = MaterialTheme.typography.headlineSmall) }) },
+    ExpressiveScaffold(
+        title = "Cykliczne",
+        subtitle = "Subskrypcje i stałe rachunki",
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { editing = Subscription(name = "", amount = 0, categoryId = subsCat, nextDate = today()) },
@@ -54,49 +59,55 @@ fun SubscriptionsScreen(vm: MainViewModel) {
         },
     ) { pad ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(pad),
-            contentPadding = PaddingValues(16.dp, 4.dp, 16.dp, 96.dp),
-            verticalArrangement = Arrangement.spacedBy(10.dp),
+            Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = 120.dp),
         ) {
             item {
-                Surface(shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.primaryContainer) {
-                    Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Surface(
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                    shape = MaterialTheme.shapes.extraLarge, color = MaterialTheme.colorScheme.tertiaryContainer,
+                ) {
+                    Row(Modifier.padding(24.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text("Miesięcznie", style = MaterialTheme.typography.labelLarge)
-                            Text(formatMoney(monthly), style = MaterialTheme.typography.headlineMedium)
-                            Text("Rocznie ok. ${formatMoney(monthly * 12, true)}", style = MaterialTheme.typography.bodySmall)
+                            Text(formatMoney(monthly), style = MaterialTheme.typography.displaySmall)
+                            Text("Rocznie ok. ${formatMoney(monthly * 12, true)}", style = MaterialTheme.typography.bodyMedium)
                         }
-                        Icon(Icons.Filled.Autorenew, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                        val shape = MaterialShapes.SoftBurst.toShape()
+                        Box(
+                            Modifier.size(64.dp).clip(shape).background(MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.12f)),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Filled.Autorenew, null, Modifier.size(32.dp)) }
                     }
                 }
             }
+            item { GroupLabel("Szybkie dodawanie") }
             item {
-                Text("Szybkie dodawanie", style = MaterialTheme.typography.titleSmall, modifier = Modifier.padding(top = 6.dp))
-                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 16.dp)) {
                     items(presets) { (n, a) ->
-                        AssistChip(onClick = { editing = Subscription(name = n, amount = a, categoryId = subsCat, nextDate = today()) },
-                            label = { Text(n) })
+                        SuggestionChip(
+                            onClick = { editing = Subscription(name = n, amount = a, categoryId = subsCat, nextDate = today()) },
+                            label = { Text(n) }, shape = CircleShape,
+                        )
                     }
                 }
             }
             if (subs.isEmpty()) item {
                 EmptyState(Icons.Filled.Autorenew, "Brak płatności cyklicznych",
-                    "Dodaj Netflixa, Spotify czy czynsz raz — OpenPayments sam zaksięguje je w dniu płatności i przypomni dzień wcześniej.")
-            }
-            items(subs, key = { it.id }) { s ->
-                Surface(onClick = { editing = s }, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
-                    Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-                        CategoryBadge(catMap[s.categoryId])
-                        Spacer(Modifier.width(14.dp))
-                        Column(Modifier.weight(1f)) {
-                            Text(s.name, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium)
-                            Text(
-                                if (s.active) "${s.cycle.label} · następna ${formatShortDay(s.nextDate)}" else "wstrzymana",
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                        Text(formatMoney(s.amount), fontWeight = FontWeight.SemiBold,
-                            color = if (s.active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline)
+                    "Dodaj Netflixa, Spotify czy czynsz raz — OpenPayments sam zaksięguje je w dniu płatności i przypomni wcześniej.")
+            } else {
+                item { GroupLabel("Twoje płatności") }
+                item {
+                    SegmentedGroup(subs) { s, shapes ->
+                        GroupRow(
+                            shapes, s.name,
+                            if (s.active) "${s.cycle.label} · następna ${formatShortDay(s.nextDate)}" else "wstrzymana",
+                            leading = { CategoryBadge(catMap[s.categoryId], 40.dp) },
+                            trailing = {
+                                Text(formatMoney(s.amount), style = MaterialTheme.typography.titleSmall,
+                                    color = if (s.active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline)
+                            },
+                        ) { editing = s }
                     }
                 }
             }
@@ -128,30 +139,33 @@ private fun SubscriptionSheet(
         Column(Modifier.padding(horizontal = 20.dp).verticalScroll(rememberScrollState()).padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(if (s.id == 0L) "Nowa płatność cykliczna" else "Edytuj płatność", style = MaterialTheme.typography.headlineSmall)
-            OutlinedTextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text("Nazwa") }, singleLine = true)
-            OutlinedTextField(amount, { v -> amount = v.filter { it.isDigit() || it == ',' || it == '.' } }, Modifier.fillMaxWidth(),
+            TextField(name, { name = it }, Modifier.fillMaxWidth(), label = { Text("Nazwa") }, singleLine = true, shape = MaterialTheme.shapes.large, colors = filledFieldColors())
+            TextField(amount, { v -> amount = v.filter { it.isDigit() || it == ',' || it == '.' } }, Modifier.fillMaxWidth(),
                 label = { Text("Kwota") }, suffix = { Text("zł") }, singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-            SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-                Cycle.entries.forEachIndexed { i, c ->
-                    SegmentedButton(cycle == c, { cycle = c }, SegmentedButtonDefaults.itemShape(i, Cycle.entries.size)) { Text(c.label) }
-                }
-            }
-            OutlinedButton(onClick = { pickDate = true }, Modifier.fillMaxWidth()) { Text("Następna płatność: ${formatDay(next)}") }
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                shape = MaterialTheme.shapes.large, colors = filledFieldColors())
+            ConnectedToggleGroup(Cycle.entries.map { it to it.label }, cycle) { cycle = it }
+            FilledTonalButton(onClick = { pickDate = true }, modifier = Modifier.fillMaxWidth().height(56.dp), shapes = ButtonDefaults.shapes()) { Icon(Icons.Filled.CalendarMonth, null); Spacer(Modifier.width(8.dp)); Text("Następna płatność: ${formatDay(next)}") }
             Text("Kategoria", style = MaterialTheme.typography.titleSmall)
             CategoryPicker(cats, cat) { cat = it }
-            ListItem(headlineContent = { Text("Księguj automatycznie") },
+            ListItem(colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent), headlineContent = { Text("Księguj automatycznie") },
                 supportingContent = { Text("Dodaj wydatek w dniu płatności") },
                 trailingContent = { Switch(autoBook, { autoBook = it }) })
-            if (s.id != 0L) ListItem(headlineContent = { Text("Aktywna") }, trailingContent = { Switch(active, { active = it }) })
+            if (s.id != 0L) ListItem(colors = ListItemDefaults.colors(containerColor = androidx.compose.ui.graphics.Color.Transparent), headlineContent = { Text("Aktywna") }, trailingContent = { Switch(active, { active = it }) })
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (onDelete != null) OutlinedButton(onClick = onDelete, Modifier.weight(1f)) { Text("Usuń", color = MaterialTheme.colorScheme.error) }
+                if (onDelete != null) FilledTonalButton(
+                    onClick = onDelete, modifier = Modifier.weight(1f).height(56.dp), shapes = ButtonDefaults.shapes(),
+                    colors = ButtonDefaults.filledTonalButtonColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer, contentColor = MaterialTheme.colorScheme.onErrorContainer,
+                    ),
+                ) { Text("Usuń") }
                 Button(
                     onClick = {
                         onSave(s.copy(name = name.trim(), amount = parseMoney(amount) ?: 0, cycle = cycle, categoryId = cat,
                             nextDate = next, autoBook = autoBook, active = active))
                     },
-                    Modifier.weight(1f), enabled = name.isNotBlank() && (parseMoney(amount) ?: 0) > 0,
+                    modifier = Modifier.weight(1f).height(56.dp), enabled = name.isNotBlank() && (parseMoney(amount) ?: 0) > 0,
+                    shapes = ButtonDefaults.shapes(),
                 ) { Text("Zapisz") }
             }
         }

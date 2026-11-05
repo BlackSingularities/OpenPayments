@@ -1,12 +1,20 @@
 package pl.openpayments.ui
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ReceiptLong
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material.icons.filled.Autorenew
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Insights
@@ -32,11 +40,12 @@ private data class Tab(val route: String, val label: String, val icon: ImageVect
 
 private val tabs = listOf(
     Tab("home", "Start", Icons.Outlined.Home, Icons.Filled.Home),
-    Tab("transactions", "Transakcje", Icons.AutoMirrored.Filled.ReceiptLong, Icons.AutoMirrored.Filled.ReceiptLong),
+    Tab("transactions", "Transakcje", Icons.AutoMirrored.Outlined.ReceiptLong, Icons.AutoMirrored.Filled.ReceiptLong),
     Tab("budgets", "Budżety", Icons.Outlined.Savings, Icons.Filled.Savings),
     Tab("subscriptions", "Cykliczne", Icons.Outlined.Autorenew, Icons.Filled.Autorenew),
     Tab("stats", "Statystyki", Icons.Outlined.Insights, Icons.Filled.Insights),
 )
+private val tabRoutes = tabs.map { it.route }.toSet()
 
 /** Akcje nawigacji przekazywane ekranom. */
 class Nav(private val c: androidx.navigation.NavHostController) {
@@ -74,11 +83,14 @@ fun AppRoot(vm: MainViewModel, canLock: () -> Boolean) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackHost) },
         bottomBar = {
-            if (tabs.any { it.route == route }) {
-                NavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
+            AnimatedVisibility(
+                route in tabRoutes,
+                enter = slideInVertically { it }, exit = slideOutVertically { it },
+            ) {
+                ShortNavigationBar(containerColor = MaterialTheme.colorScheme.surfaceContainer) {
                     tabs.forEach { t ->
                         val sel = route == t.route
-                        NavigationBarItem(
+                        ShortNavigationBarItem(
                             selected = sel, onClick = { nav.tab(t.route) },
                             icon = { Icon(if (sel) t.selectedIcon else t.icon, null) },
                             label = { Text(t.label, maxLines = 1) },
@@ -87,32 +99,42 @@ fun AppRoot(vm: MainViewModel, canLock: () -> Boolean) {
                 }
             }
         },
+        contentWindowInsets = androidx.compose.foundation.layout.WindowInsets(0),
     ) { pad ->
-        NavHost(
-            controller, startDestination = "home", modifier = Modifier.padding(bottom = pad.calculateBottomPadding()),
-            enterTransition = { fadeIn() }, exitTransition = { fadeOut() },
-        ) {
-            composable("home") { HomeScreen(vm, nav) }
-            composable("transactions") { TransactionsScreen(vm, nav) }
-            composable("budgets") { BudgetsScreen(vm) }
-            composable("subscriptions") { SubscriptionsScreen(vm) }
-            composable("stats") { StatsScreen(vm) }
-            composable("settings",
-                enterTransition = { slideInHorizontally { it } }, exitTransition = { slideOutHorizontally { it } },
-            ) { SettingsScreen(vm, nav, canLock) }
-            composable("categories") { CategoriesScreen(vm, nav) }
-            composable("scan") { ScanScreen(vm, nav) }
-            composable(
-                "edit/{id}?receipt={receipt}&income={income}",
-                arguments = listOf(
-                    navArgument("id") { type = NavType.LongType },
-                    navArgument("receipt") { type = NavType.BoolType; defaultValue = false },
-                    navArgument("income") { type = NavType.BoolType; defaultValue = false },
-                ),
-                enterTransition = { slideInHorizontally { it } }, exitTransition = { slideOutHorizontally { it } },
-            ) { e ->
-                val a = e.arguments!!
-                EditTransactionScreen(vm, nav, a.getLong("id"), a.getBoolean("receipt"), a.getBoolean("income"))
+        val motion = MaterialTheme.motionScheme
+        Box(Modifier.fillMaxSize().padding(bottom = pad.calculateBottomPadding())) {
+            NavHost(
+                controller, startDestination = "home",
+                enterTransition = { fadeIn(motion.defaultEffectsSpec()) + scaleIn(initialScale = 0.96f) },
+                exitTransition = { fadeOut(motion.fastEffectsSpec()) },
+                popEnterTransition = { fadeIn(motion.defaultEffectsSpec()) },
+                popExitTransition = { fadeOut(motion.fastEffectsSpec()) + scaleOut(targetScale = 0.96f) },
+            ) {
+                composable("home") { HomeScreen(vm, nav) }
+                composable("transactions") { TransactionsScreen(vm, nav) }
+                composable("budgets") { BudgetsScreen(vm) }
+                composable("subscriptions") { SubscriptionsScreen(vm) }
+                composable("stats") { StatsScreen(vm) }
+                val slideIn: androidx.compose.animation.AnimatedContentTransitionScope<*>.() -> androidx.compose.animation.EnterTransition =
+                    { slideInHorizontally { it / 3 } + fadeIn() }
+                val slideOut: androidx.compose.animation.AnimatedContentTransitionScope<*>.() -> androidx.compose.animation.ExitTransition =
+                    { slideOutHorizontally { it / 3 } + fadeOut() }
+                composable("settings", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { SettingsScreen(vm, nav, canLock) }
+                composable("categories", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { CategoriesScreen(vm, nav) }
+                composable("scan", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { ScanScreen(vm, nav) }
+                composable(
+                    "edit/{id}?receipt={receipt}&income={income}",
+                    arguments = listOf(
+                        navArgument("id") { type = NavType.LongType },
+                        navArgument("receipt") { type = NavType.BoolType; defaultValue = false },
+                        navArgument("income") { type = NavType.BoolType; defaultValue = false },
+                    ),
+                    enterTransition = { slideInVertically { it / 4 } + fadeIn() },
+                    popExitTransition = { slideOutVertically { it / 4 } + fadeOut() },
+                ) { e ->
+                    val a = e.arguments!!
+                    EditTransactionScreen(vm, nav, a.getLong("id"), a.getBoolean("receipt"), a.getBoolean("income"))
+                }
             }
         }
     }

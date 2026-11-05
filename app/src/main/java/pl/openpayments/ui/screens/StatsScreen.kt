@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -54,12 +56,20 @@ fun StatsScreen(vm: MainViewModel) {
         return (1..upTo).map { day -> acc += list.filter { it.date.toDate().dayOfMonth == day }.sumOf { it.amount }; acc }
     }
 
-    Scaffold(topBar = { TopAppBar(title = { Text("Statystyki", style = MaterialTheme.typography.headlineSmall) }) }) { pad ->
+    ExpressiveScaffold(
+        title = "Statystyki",
+        subtitle = monthName(month),
+        actions = {
+            IconButton(onClick = { vm.shiftMonth(-1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Poprzedni miesiąc") }
+            IconButton(onClick = { vm.shiftMonth(1) }, enabled = month < YearMonth.now()) {
+                Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, "Następny miesiąc")
+            }
+        },
+    ) { pad ->
         LazyColumn(
-            Modifier.fillMaxSize().padding(pad), contentPadding = PaddingValues(16.dp, 0.dp, 16.dp, 24.dp),
+            Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = pad.calculateTopPadding(), bottom = 32.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            item { MonthSwitcher(month, vm::shiftMonth) }
             if (expenses.isEmpty()) {
                 item { EmptyState(Icons.Filled.Insights, "Jeszcze nic tu nie ma", "Statystyki pojawią się po dodaniu pierwszych wydatków.") }
                 return@LazyColumn
@@ -173,7 +183,7 @@ fun StatsScreen(vm: MainViewModel) {
 
 @Composable
 private fun StatTile(label: String, value: String, modifier: Modifier) {
-    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(modifier, shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.secondaryContainer) {
         Column(Modifier.padding(14.dp)) {
             Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             Spacer(Modifier.height(4.dp))

@@ -50,6 +50,7 @@ class MainViewModel(private val app: Application, val repo: Repository) : ViewMo
     val subscriptions = repo.subscriptions.state(emptyList())
     val ruleCount = repo.ruleCount.state(0)
     val theme: StateFlow<String> = repo.prefs.theme
+    val dynamicColor: StateFlow<Boolean> = repo.prefs.dynamicColor
 
     private val _month = MutableStateFlow(YearMonth.now())
     val month = _month.asStateFlow()

@@ -1,3 +1,14 @@
+## 1.2.0
+
+- Nowy interfejs w stylu Androida 16 (Material 3 Expressive): sprężyste animacje, mocniej zaokrąglone kształty i nowa typografia.
+- Kolory z tapety (Material You) na Androidzie 12 i nowszym, z możliwością powrotu do zielonej palety aplikacji.
+- Duże, zwijane nagłówki ekranów i nowy pasek nawigacji.
+- Przycisk dodawania rozwija menu: skan paragonu, wydatek, przychód.
+- Listy zgrupowane jak w ustawieniach Androida 16; ikony kategorii w kształtach Expressive.
+- Falujące paski postępu budżetu, nowy wskaźnik ładowania przy skanowaniu, połączone przyciski wyboru.
+- Przewidywane cofanie (predictive back) i płynniejsze przejścia między ekranami.
+- Poprawki czytelności w trybie ciemnym.
+
 ## 1.1.0
 
 - Automatyczne aktualizacje przez redzikowski.com: sprawdzanie przy uruchomieniu, pobieranie z weryfikacją SHA-256 i certyfikatu podpisu, instalacja bez wychodzenia z aplikacji.

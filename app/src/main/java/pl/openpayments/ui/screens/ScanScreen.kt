@@ -83,7 +83,7 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
         ) {
             Box(
                 Modifier.fillMaxWidth().weight(1f).clip(MaterialTheme.shapes.extraLarge)
-                    .background(MaterialTheme.colorScheme.surfaceContainer),
+                    .background(MaterialTheme.colorScheme.surfaceContainerLow),
                 contentAlignment = Alignment.Center,
             ) {
                 val f = processing
@@ -91,7 +91,7 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
                     AsyncImage(f, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.6f)
                     ScanLine()
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        CircularProgressIndicator()
+                        ContainedLoadingIndicator(Modifier.size(96.dp))
                         Spacer(Modifier.height(12.dp))
                         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface) {
                             Text("Odczytuję sklep, datę i pozycje…", Modifier.padding(12.dp))
@@ -99,7 +99,11 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
                     }
                 } else {
                     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.padding(28.dp)) {
-                        Icon(Icons.Filled.DocumentScanner, null, Modifier.size(72.dp), tint = MaterialTheme.colorScheme.primary)
+                        val cookie = MaterialShapes.Cookie12Sided.toShape()
+                        Box(
+                            Modifier.size(112.dp).clip(cookie).background(MaterialTheme.colorScheme.primaryContainer),
+                            contentAlignment = Alignment.Center,
+                        ) { Icon(Icons.Filled.DocumentScanner, null, Modifier.size(52.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
                         Spacer(Modifier.height(16.dp))
                         Text("Zrób zdjęcie paragonu", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(8.dp))
@@ -126,13 +130,13 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
                     pendingFile = f; camera.launch(uri)
                 },
                 enabled = processing == null,
-                modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(64.dp), shapes = ButtonDefaults.shapes(),
             ) { Icon(Icons.Filled.PhotoCamera, null); Spacer(Modifier.width(8.dp)); Text("Zrób zdjęcie") }
             Spacer(Modifier.height(10.dp))
-            OutlinedButton(
+            FilledTonalButton(
                 onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
                 enabled = processing == null,
-                modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(64.dp), shapes = ButtonDefaults.shapes(),
             ) { Icon(Icons.Filled.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Wybierz z galerii") }
         }
     }

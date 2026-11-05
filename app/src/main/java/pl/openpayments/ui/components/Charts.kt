@@ -56,7 +56,7 @@ fun BarChart(values: List<Pair<String, Long>>, modifier: Modifier = Modifier, hi
     LaunchedEffect(values) { progress.animateTo(1f, tween(700)) }
     val max = (values.maxOfOrNull { it.second } ?: 0).coerceAtLeast(1)
     val primary = MaterialTheme.colorScheme.primary
-    val muted = MaterialTheme.colorScheme.primary.copy(alpha = 0.28f)
+    val muted = androidx.compose.ui.graphics.lerp(MaterialTheme.colorScheme.surfaceContainerLow, MaterialTheme.colorScheme.primary, 0.3f)
     val grid = MaterialTheme.colorScheme.outlineVariant
     Column(modifier) {
         Canvas(Modifier.fillMaxWidth().weight(1f)) {
@@ -65,7 +65,8 @@ fun BarChart(values: List<Pair<String, Long>>, modifier: Modifier = Modifier, hi
             val bw = slot * 0.56f
             for (i in 1..3) {
                 val y = size.height * i / 4
-                drawLine(grid, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f)
+                drawLine(grid, Offset(0f, y), Offset(size.width, y), strokeWidth = 1f,
+                    pathEffect = androidx.compose.ui.graphics.PathEffect.dashPathEffect(floatArrayOf(6f, 8f)))
             }
             values.forEachIndexed { i, (_, v) ->
                 val h = size.height * v / max * progress.value

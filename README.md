@@ -22,7 +22,7 @@ Poza zakresem (wymaga serwera albo oficjalnych API sieci handlowych): integracje
 oraz budżet współdzielony między kontami.
 
 ## Architektura
-- **Kotlin + Jetpack Compose (Material 3)**, jedna aktywność, Navigation Compose
+- **Kotlin + Jetpack Compose, Material 3 Expressive (Android 16)**: kolory z tapety, MotionScheme.expressive, LargeFlexibleTopAppBar, ShortNavigationBar, FloatingActionButtonMenu, SegmentedListItem, MaterialShapes; jedna aktywność, Navigation Compose
 - **Room** (SQLite): `Category`, `Transaction`, `ReceiptItem`, `Budget`, `Subscription`, `CategoryRule`
 - `Repository` z logiką domenową, `MainViewModel` z `StateFlow` dla UI
 - Kwoty w groszach (`Long`), daty jako epoch day

@@ -13,6 +13,10 @@ class Prefs(ctx: Context) {
     val theme: StateFlow<String> = _theme
     fun setTheme(v: String) { sp.edit { putString("theme", v) }; _theme.value = v }
 
+    private val _dynamic = MutableStateFlow(sp.getBoolean("dynamic_color", true))
+    val dynamicColor: StateFlow<Boolean> = _dynamic
+    fun setDynamicColor(v: Boolean) { sp.edit { putBoolean("dynamic_color", v) }; _dynamic.value = v }
+
     var budgetAlerts: Boolean
         get() = sp.getBoolean("budget_alerts", true)
         set(v) = sp.edit { putBoolean("budget_alerts", v) }

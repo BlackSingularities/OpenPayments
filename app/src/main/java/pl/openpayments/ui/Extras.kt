@@ -24,13 +24,13 @@ import pl.openpayments.domain.parseMoney
 @Composable
 fun OnboardingScreen(vm: MainViewModel) {
     var budget by remember { mutableStateOf("") }
-    Surface(color = MaterialTheme.colorScheme.background) {
+    Surface(color = MaterialTheme.colorScheme.surface) {
         Column(
             Modifier.fillMaxSize().systemBarsPadding().imePadding().verticalScroll(rememberScrollState()).padding(24.dp),
         ) {
             Spacer(Modifier.height(32.dp))
             Box(
-                Modifier.size(72.dp).clip(MaterialTheme.shapes.large).background(MaterialTheme.colorScheme.primary),
+                Modifier.size(88.dp).clip(MaterialShapes.Cookie9Sided.toShape()).background(MaterialTheme.colorScheme.primary),
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.AutoMirrored.Filled.ReceiptLong, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.onPrimary) }
             Spacer(Modifier.height(24.dp))
@@ -46,15 +46,16 @@ fun OnboardingScreen(vm: MainViewModel) {
             Feature(Icons.Filled.NotificationsActive, "Pilnuje budżetu", "Ostrzeżenie, zanim przekroczysz limit, nie po fakcie.")
             Feature(Icons.Filled.Lock, "Prywatnie", "Dane zostają na telefonie. Bez kont i bez reklam.")
             Spacer(Modifier.height(24.dp))
-            OutlinedTextField(
+            TextField(
                 budget, { v -> budget = v.filter { it.isDigit() || it == ',' || it == '.' } }, Modifier.fillMaxWidth(),
                 label = { Text("Ile chcesz wydawać miesięcznie? (opcjonalnie)") }, suffix = { Text("zł") }, singleLine = true,
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = MaterialTheme.shapes.medium,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), shape = MaterialTheme.shapes.large,
+                colors = pl.openpayments.ui.components.filledFieldColors(),
             )
             Spacer(Modifier.height(20.dp))
             Button(
                 onClick = { vm.finishOnboarding(parseMoney(budget)) },
-                modifier = Modifier.fillMaxWidth().height(56.dp), shape = MaterialTheme.shapes.large,
+                modifier = Modifier.fillMaxWidth().height(64.dp), shapes = ButtonDefaults.shapes(),
             ) { Text("Zaczynamy", style = MaterialTheme.typography.titleMedium) }
             Spacer(Modifier.height(16.dp))
             Text(
@@ -69,9 +70,9 @@ fun OnboardingScreen(vm: MainViewModel) {
 private fun Feature(icon: ImageVector, title: String, text: String) {
     Row(Modifier.padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(
-            Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primaryContainer),
+            Modifier.size(48.dp).clip(MaterialShapes.Clover4Leaf.toShape()).background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
-        ) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary) }
+        ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onPrimaryContainer) }
         Spacer(Modifier.width(14.dp))
         Column {
             Text(title, style = MaterialTheme.typography.titleMedium)
@@ -82,16 +83,19 @@ private fun Feature(icon: ImageVector, title: String, text: String) {
 
 @Composable
 fun LockScreen(unlock: () -> Unit) {
-    Surface(color = MaterialTheme.colorScheme.background) {
+    Surface(color = MaterialTheme.colorScheme.surface) {
         Column(
             Modifier.fillMaxSize().padding(32.dp),
             horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
         ) {
-            Icon(Icons.Filled.Lock, null, Modifier.size(56.dp), tint = MaterialTheme.colorScheme.primary)
+            Box(
+                Modifier.size(112.dp).clip(MaterialShapes.Cookie12Sided.toShape()).background(MaterialTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) { Icon(Icons.Filled.Lock, null, Modifier.size(48.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
             Spacer(Modifier.height(16.dp))
             Text("OpenPayments jest zablokowane", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
             Spacer(Modifier.height(24.dp))
-            Button(onClick = unlock) { Icon(Icons.Filled.Fingerprint, null); Spacer(Modifier.width(8.dp)); Text("Odblokuj") }
+            Button(onClick = unlock, shapes = ButtonDefaults.shapes(), modifier = Modifier.height(56.dp)) { Icon(Icons.Filled.Fingerprint, null); Spacer(Modifier.width(8.dp)); Text("Odblokuj") }
         }
     }
 }
@@ -109,7 +113,7 @@ fun UpdateDialog(vm: MainViewModel) {
                 Text("Nowa wersja OpenPayments jest gotowa do instalacji. Twoje dane zostaną zachowane.")
                 if (vm.updateBusy) {
                     Spacer(Modifier.height(16.dp))
-                    LinearProgressIndicator({ vm.updateProgress }, Modifier.fillMaxWidth())
+                    LinearWavyProgressIndicator({ vm.updateProgress }, Modifier.fillMaxWidth())
                 }
                 vm.updateStatus?.let { Spacer(Modifier.height(8.dp)); Text(it, style = MaterialTheme.typography.bodySmall) }
             }
