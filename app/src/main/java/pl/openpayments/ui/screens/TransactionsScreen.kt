@@ -24,7 +24,7 @@ import pl.openpayments.domain.formatMoney
 import pl.openpayments.ui.MainViewModel
 import pl.openpayments.ui.Nav
 import pl.openpayments.ui.components.EmptyState
-import pl.openpayments.ui.components.ExpressiveScaffold
+import pl.openpayments.ui.components.TabScaffold
 import pl.openpayments.ui.components.TransactionItem
 
 private enum class Kind(val label: String) { ALL("Wszystkie"), OUT("Wydatki"), IN("Przychody") }
@@ -48,9 +48,8 @@ fun TransactionsScreen(vm: MainViewModel, nav: Nav) {
     val grouped = remember(filtered) { filtered.groupBy { it.date } }
     val totalOut = filtered.filter { !it.isIncome }.sumOf { it.amount }
 
-    ExpressiveScaffold(
-        title = "Transakcje",
-        subtitle = if (filtered.isEmpty()) null else "${filtered.size} pozycji · wydatki ${formatMoney(totalOut, true)}",
+    TabScaffold(
+        info = if (filtered.isEmpty()) "Brak pozycji" else "${filtered.size} pozycji · wydatki ${formatMoney(totalOut, true)}",
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = 32.dp)) {
             item {

@@ -1,3 +1,7 @@
+## 1.2.2
+
+- Zakładki bez dużych nagłówków powtarzających nazwę z paska nawigacji. W górnym pasku zostaje tylko to, co ważne w danej chwili: miesiąc, liczba pozycji z sumą wydatków albo dni do końca miesiąca.
+
 ## 1.2.1
 
 - Wydanie porządkowe interfejsu w stylu Androida 16: czytelniejsze ikony kategorii w trybie ciemnym, spokojniejsza siatka wykresu miesięcy, ikona portfela przy budżecie ogólnym.

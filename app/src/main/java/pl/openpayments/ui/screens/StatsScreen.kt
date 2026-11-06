@@ -56,9 +56,8 @@ fun StatsScreen(vm: MainViewModel) {
         return (1..upTo).map { day -> acc += list.filter { it.date.toDate().dayOfMonth == day }.sumOf { it.amount }; acc }
     }
 
-    ExpressiveScaffold(
-        title = "Statystyki",
-        subtitle = monthName(month),
+    TabScaffold(
+        info = monthName(month),
         actions = {
             IconButton(onClick = { vm.shiftMonth(-1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Poprzedni miesiąc") }
             IconButton(onClick = { vm.shiftMonth(1) }, enabled = month < YearMonth.now()) {

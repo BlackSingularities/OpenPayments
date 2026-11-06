@@ -136,6 +136,37 @@ fun ExpressiveScaffold(
     )
 }
 
+/**
+ * Ekran zakładki z dolnego paska: bez dużego tytułu (nazwa zakładki jest już w nawigacji),
+ * w górnym pasku tylko informacja kontekstowa i akcje.
+ */
+@Composable
+fun TabScaffold(
+    info: String,
+    actions: @Composable RowScope.() -> Unit = {},
+    floatingActionButton: @Composable () -> Unit = {},
+    content: @Composable (PaddingValues) -> Unit,
+) {
+    val scroll = TopAppBarDefaults.pinnedScrollBehavior()
+    Scaffold(
+        modifier = Modifier.nestedScroll(scroll.nestedScrollConnection),
+        containerColor = MaterialTheme.colorScheme.surface,
+        topBar = {
+            TopAppBar(
+                title = { Text(info, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                actions = actions,
+                scrollBehavior = scroll,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceContainer,
+                ),
+            )
+        },
+        floatingActionButton = floatingActionButton,
+        content = content,
+    )
+}
+
 /** Karta sekcji na tle surfaceContainer — bez obramowań i cieni. */
 @Composable
 fun SectionCard(

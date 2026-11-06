@@ -48,9 +48,8 @@ fun SubscriptionsScreen(vm: MainViewModel) {
         when (it.cycle) { Cycle.WEEKLY -> it.amount * 52 / 12; Cycle.MONTHLY -> it.amount; Cycle.YEARLY -> it.amount / 12 }
     }
 
-    ExpressiveScaffold(
-        title = "Cykliczne",
-        subtitle = "Subskrypcje i stałe rachunki",
+    TabScaffold(
+        info = "Subskrypcje i stałe rachunki",
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { editing = Subscription(name = "", amount = 0, categoryId = subsCat, nextDate = today()) },

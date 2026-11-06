@@ -56,9 +56,8 @@ fun HomeScreen(vm: MainViewModel, nav: Nav) {
     val totalBudget = budgets.firstOrNull { it.categoryId == null }
     val upcoming = subs.filter { it.active && it.nextDate in today()..today() + 7 }
 
-    ExpressiveScaffold(
-        title = monthName(month),
-        subtitle = "OpenPayments",
+    TabScaffold(
+        info = monthName(month),
         actions = {
             IconButton(onClick = { vm.shiftMonth(-1) }) { Icon(Icons.AutoMirrored.Filled.KeyboardArrowLeft, "Poprzedni miesiąc") }
             IconButton(onClick = { vm.shiftMonth(1) }, enabled = month < YearMonth.now()) {

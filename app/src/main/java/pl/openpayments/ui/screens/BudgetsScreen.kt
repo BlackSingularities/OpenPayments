@@ -38,9 +38,8 @@ fun BudgetsScreen(vm: MainViewModel) {
     val expenses = remember(all) { all.filter { !it.isIncome && it.date in range } }
     val daysLeft = month.lengthOfMonth() - LocalDate.now().dayOfMonth + 1
 
-    ExpressiveScaffold(
-        title = "Budżety",
-        subtitle = "${monthName(month)} · zostało $daysLeft dni",
+    TabScaffold(
+        info = "${monthName(month)} · zostało $daysLeft dni",
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { editing = Budget(name = "", limit = 0, categoryId = null) },
