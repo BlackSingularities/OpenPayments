@@ -17,6 +17,7 @@ automatyczna kategoryzacja, budżety z ostrzeżeniami, płatności cykliczne i s
 | Blokada aplikacji (biometria / PIN telefonu) | `MainActivity`, androidx.biometric |
 | Ranking produktów z paragonów | `StatsScreen`, zapytanie `observeProducts` |
 | Automatyczne aktualizacje przez redzikowski.com | `update/Updates.kt` |
+| Rozwijanie skrótów z paragonów, polskie znaki, grupy produktów, nauka z poprawek | `ProductDictionary`, tabela `product_aliases` |
 
 Poza zakresem (wymaga serwera albo oficjalnych API sieci handlowych): integracje z Lidl Plus/Biedronką/Żabką
 oraz budżet współdzielony między kontami.

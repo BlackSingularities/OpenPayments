@@ -17,6 +17,7 @@ object Backup {
         val budgets: List<Budget>,
         val subscriptions: List<Subscription>,
         val rules: List<CategoryRule>,
+        val aliases: List<ProductAlias> = emptyList(),
     )
 
     private inline fun <T> JSONArray.map(f: (JSONObject) -> T): List<T> = (0 until length()).map { f(getJSONObject(it)) }
@@ -33,7 +34,11 @@ object Backup {
                 .put("note", it.note).put("categoryId", it.categoryId ?: JSONObject.NULL).put("date", it.date)
                 .put("source", it.source.name).put("subscriptionId", it.subscriptionId ?: JSONObject.NULL)
         })
-        put("items", arr(s.items) { JSONObject().put("id", it.id).put("transactionId", it.transactionId).put("name", it.name).put("quantity", it.quantity).put("price", it.price) })
+        put("items", arr(s.items) {
+            JSONObject().put("id", it.id).put("transactionId", it.transactionId).put("name", it.name).put("quantity", it.quantity)
+                .put("price", it.price).put("rawName", it.rawName ?: JSONObject.NULL).put("productGroup", it.productGroup ?: JSONObject.NULL)
+        })
+        put("aliases", arr(s.aliases) { JSONObject().put("key", it.key).put("name", it.name) })
         put("budgets", arr(s.budgets) { JSONObject().put("id", it.id).put("name", it.name).put("limit", it.limit).put("categoryId", it.categoryId ?: JSONObject.NULL).put("alertPercent", it.alertPercent) })
         put("subscriptions", arr(s.subscriptions) {
             JSONObject().put("id", it.id).put("name", it.name).put("amount", it.amount).put("categoryId", it.categoryId ?: JSONObject.NULL)
@@ -61,7 +66,10 @@ object Backup {
         return Snapshot(
             categories = cats,
             transactions = tx,
-            items = o.getJSONArray("items").map { ReceiptItem(it.getLong("id"), it.getLong("transactionId"), it.getString("name"), it.getDouble("quantity"), it.getLong("price")) }
+            items = o.getJSONArray("items").map {
+                ReceiptItem(it.getLong("id"), it.getLong("transactionId"), it.getString("name"), it.getDouble("quantity"),
+                    it.getLong("price"), it.optStr("rawName"), it.optStr("productGroup"))
+            }
                 .filter { it.transactionId in txIds },
             budgets = o.getJSONArray("budgets").map { Budget(it.getLong("id"), it.getString("name"), it.getLong("limit"), it.optLongOrNull("categoryId"), it.getInt("alertPercent")) },
             subscriptions = o.getJSONArray("subscriptions").map {
@@ -71,8 +79,7 @@ object Backup {
             },
             rules = o.getJSONArray("rules").map { CategoryRule(it.getLong("id"), it.getString("keyword"), it.getLong("categoryId")) }
                 .filter { it.categoryId in catIds },
+            aliases = o.optJSONArray("aliases")?.map { ProductAlias(it.getString("key"), it.getString("name")) } ?: emptyList(),
         )
     }
-
-    @Suppress("unused") private fun unused(o: JSONObject) = o.optStr("x")
 }

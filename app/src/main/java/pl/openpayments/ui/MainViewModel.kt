@@ -57,6 +57,9 @@ class MainViewModel(private val app: Application, val repo: Repository) : ViewMo
     fun shiftMonth(delta: Long) { _month.value = _month.value.plusMonths(delta) }
 
     val products = _month.flatMapLatest { repo.products(it, 8) }.state(emptyList())
+    val productGroups = _month.flatMapLatest { repo.productGroups(it) }.state(emptyList())
+    val aliasCount = repo.aliasCount.state(0)
+    fun clearAliases() = viewModelScope.launch { repo.clearAliases(); snack("Wyczyszczono wyuczone nazwy produktów") }
 
     var draft: ReceiptDraft? = null
 

@@ -25,6 +25,7 @@ class OpenPaymentsApp : Application() {
             repository.seedIfEmpty()
             repository.processDueSubscriptions()
             repository.cleanupReceipts()
+            repository.backfillGroups()
         }
     }
 }

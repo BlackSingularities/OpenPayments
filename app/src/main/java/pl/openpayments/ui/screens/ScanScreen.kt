@@ -49,7 +49,7 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
                 if (r.total == null && r.items.isEmpty()) error("nothing")
                 vm.draft = ReceiptDraft(
                     merchant = r.merchant ?: "", date = r.date, total = r.total,
-                    items = r.items.map { ReceiptItem(name = it.name, quantity = it.quantity, price = it.price) },
+                    items = vm.repo.resolveItems(r.items),
                     imagePath = file.absolutePath, consistent = ReceiptParser.isConsistent(r), rawLines = lines,
                 )
             }.onSuccess { nav.replaceWithEdit() }

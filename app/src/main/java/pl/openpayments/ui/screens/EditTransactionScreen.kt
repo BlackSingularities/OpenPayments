@@ -42,7 +42,7 @@ import java.io.File
 import java.time.Instant
 import java.time.ZoneOffset
 
-private class ItemRow(name: String, price: String, val qty: Double = 1.0) {
+private class ItemRow(name: String, price: String, val qty: Double = 1.0, val raw: String? = null) {
     var name by mutableStateOf(name)
     var price by mutableStateOf(price)
 }
@@ -76,12 +76,12 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
             original = t
             isIncome = t.isIncome; amount = moneyInput(t.amount); merchant = t.merchant; note = t.note
             date = t.date; categoryId = t.categoryId; userPickedCategory = true; image = t.receiptImage
-            items.clear(); items += vm.repo.items(id).map { ItemRow(it.name, moneyInput(it.price), it.quantity) }
+            items.clear(); items += vm.repo.items(id).map { ItemRow(it.name, moneyInput(it.price), it.quantity, it.rawName) }
         } else if (fromReceipt) {
             vm.draft?.let { d ->
                 merchant = d.merchant; d.date?.let { date = it }; d.total?.let { amount = moneyInput(it) }
                 image = d.imagePath; receiptConsistent = d.consistent
-                items.clear(); items += d.items.map { ItemRow(it.name, moneyInput(it.price), it.quantity) }
+                items.clear(); items += d.items.map { ItemRow(it.name, moneyInput(it.price), it.quantity, it.rawName) }
                 categoryId = vm.repo.suggestCategory(d.merchant)
             }
         }
@@ -111,7 +111,7 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
             receiptImage = image, subscriptionId = original?.subscriptionId,
         )
         val ri = if (isIncome) emptyList() else items.filter { it.name.isNotBlank() }.map {
-            ReceiptItem(name = it.name.trim(), quantity = it.qty, price = parseMoney(it.price) ?: 0)
+            ReceiptItem(name = it.name.trim(), quantity = it.qty, price = parseMoney(it.price) ?: 0, rawName = it.raw)
         }
         vm.saveTransaction(t, ri) {
             vm.draft = null
@@ -246,10 +246,21 @@ fun EditTransactionScreen(vm: MainViewModel, nav: Nav, id: Long, fromReceipt: Bo
                             modifier = Modifier.clip(MaterialTheme.shapes.small).background(MaterialTheme.colorScheme.tertiaryContainer).padding(10.dp).fillMaxWidth())
                         Spacer(Modifier.height(8.dp))
                     }
+                    if (items.any { it.raw != null }) {
+                        Text("Skrócone nazwy z paragonu rozwinęliśmy automatycznie. Popraw nazwę, a zapamiętamy ją na kolejne zakupy.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp))
+                    }
                     items.forEachIndexed { i, row ->
                         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
+                            val group = remember(row.name) { pl.openpayments.domain.ProductDictionary.groupOf(row.name) }
                             OutlinedTextField(row.name, { row.name = it }, Modifier.weight(1f), singleLine = true,
-                                textStyle = MaterialTheme.typography.bodyMedium, placeholder = { Text("Nazwa") })
+                                textStyle = MaterialTheme.typography.bodyMedium, placeholder = { Text("Nazwa") },
+                                shape = MaterialTheme.shapes.medium,
+                                supportingText = {
+                                    Text(listOfNotNull(group.label, row.raw?.takeIf { !it.equals(row.name, true) }?.let { "z paragonu: $it" })
+                                        .joinToString(" · "), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                                })
                             Spacer(Modifier.width(8.dp))
                             OutlinedTextField(row.price, { v -> row.price = v.filter { it.isDigit() || it == ',' || it == '.' } },
                                 Modifier.width(96.dp), singleLine = true, textStyle = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),

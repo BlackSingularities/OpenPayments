@@ -16,8 +16,9 @@ class Converters {
 
 @Database(
     entities = [Category::class, Transaction::class, ReceiptItem::class, Budget::class,
-        Subscription::class, CategoryRule::class],
-    version = 1, exportSchema = true,
+        Subscription::class, CategoryRule::class, ProductAlias::class],
+    version = 2, exportSchema = true,
+    autoMigrations = [androidx.room.AutoMigration(from = 1, to = 2)],
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -26,6 +27,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun budgets(): BudgetDao
     abstract fun subscriptions(): SubscriptionDao
     abstract fun rules(): RuleDao
+    abstract fun aliases(): AliasDao
 
     companion object {
         fun build(ctx: Context) =

@@ -31,6 +31,7 @@ fun StatsScreen(vm: MainViewModel) {
     val catMap = remember(cats) { cats.associateBy { it.id } }
     val expenses = remember(all) { all.filter { !it.isIncome } }
     val products by vm.products.collectAsState()
+    val groups by vm.productGroups.collectAsState()
 
     val sixMonths = remember(expenses, month) {
         (5 downTo 0).map { d ->
@@ -134,6 +135,32 @@ fun StatsScreen(vm: MainViewModel) {
                                     style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 )
                             }
+                        }
+                    }
+                }
+            }
+            if (groups.isNotEmpty()) item {
+                SectionCard {
+                    Text("Co jest w koszyku", style = MaterialTheme.typography.titleMedium)
+                    Text("Produkty z paragonów według grup", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Spacer(Modifier.height(16.dp))
+                    val sum = groups.sumOf { it.total }.coerceAtLeast(1)
+                    // Pasek proporcji grup
+                    Row(Modifier.fillMaxWidth().height(14.dp).clip(CircleShape), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                        groups.forEach { g ->
+                            val pg = runCatching { pl.openpayments.domain.ProductGroup.valueOf(g.productGroup ?: "") }.getOrDefault(pl.openpayments.domain.ProductGroup.OTHER)
+                            Box(Modifier.weight(g.total.toFloat().coerceAtLeast(1f)).fillMaxHeight().background(Color(pg.color)))
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    groups.forEach { g ->
+                        val pg = runCatching { pl.openpayments.domain.ProductGroup.valueOf(g.productGroup ?: "") }.getOrDefault(pl.openpayments.domain.ProductGroup.OTHER)
+                        Row(Modifier.padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Box(Modifier.size(10.dp).clip(CircleShape).background(Color(pg.color)))
+                            Spacer(Modifier.width(10.dp))
+                            Text(pg.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text("${g.total * 100 / sum}%  ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(formatMoney(g.total), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                         }
                     }
                 }

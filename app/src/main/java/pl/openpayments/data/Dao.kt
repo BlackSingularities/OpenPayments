@@ -38,6 +38,8 @@ interface TransactionDao {
     @Query("DELETE FROM receipt_items WHERE transactionId = :txId") suspend fun clearItems(txId: Long)
     @Insert suspend fun insertItems(items: List<ReceiptItem>)
     @Query("SELECT * FROM receipt_items") suspend fun allItems(): List<ReceiptItem>
+    @Query("SELECT * FROM receipt_items WHERE productGroup IS NULL") suspend fun itemsWithoutGroup(): List<ReceiptItem>
+    @Query("UPDATE receipt_items SET productGroup = :group WHERE id = :id") suspend fun setGroup(id: Long, group: String)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(t: List<Transaction>)
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAllItems(items: List<ReceiptItem>)
 
@@ -48,6 +50,14 @@ interface TransactionDao {
            WHERE t.date BETWEEN :from AND :to GROUP BY LOWER(i.name) ORDER BY total DESC LIMIT :limit"""
     )
     fun observeProducts(from: Long, to: Long, limit: Int): Flow<List<ProductStat>>
+
+    /** Wydatki z paragonów w zakresie dat w podziale na grupy produktów. */
+    @Query(
+        """SELECT i.productGroup AS productGroup, SUM(i.price) AS total
+           FROM receipt_items i JOIN transactions t ON t.id = i.transactionId
+           WHERE t.date BETWEEN :from AND :to GROUP BY i.productGroup ORDER BY total DESC"""
+    )
+    fun observeGroups(from: Long, to: Long): Flow<List<GroupSum>>
 
     @androidx.room.Transaction
     suspend fun saveWithItems(t: Transaction, items: List<ReceiptItem>?): Long {
@@ -79,6 +89,15 @@ interface SubscriptionDao {
     @Query("SELECT * FROM subscriptions") suspend fun all(): List<Subscription>
     @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(s: List<Subscription>)
     @Delete suspend fun delete(s: Subscription)
+}
+
+@Dao
+interface AliasDao {
+    @Query("SELECT * FROM product_aliases") suspend fun all(): List<ProductAlias>
+    @Query("SELECT COUNT(*) FROM product_aliases") fun observeCount(): Flow<Int>
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun put(a: ProductAlias)
+    @Insert(onConflict = OnConflictStrategy.REPLACE) suspend fun insertAll(a: List<ProductAlias>)
+    @Query("DELETE FROM product_aliases") suspend fun clear()
 }
 
 @Dao

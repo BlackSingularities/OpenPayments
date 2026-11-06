@@ -59,6 +59,7 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav, canLock: () -> Boolean) {
     val theme by vm.theme.collectAsState()
     val dynamic by vm.dynamicColor.collectAsState()
     val rules by vm.ruleCount.collectAsState()
+    val aliases by vm.aliasCount.collectAsState()
     var alerts by remember { mutableStateOf(prefs.budgetAlerts) }
     var reminders by remember { mutableStateOf(prefs.subscriptionReminders) }
     var learn by remember { mutableStateOf(prefs.learnRules) }
@@ -114,6 +115,8 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav, canLock: () -> Boolean) {
                 },
                 SettingRow.Action(Icons.Filled.Category, "Kategorie", "Dodawaj i edytuj kategorie") { nav.categories() },
                 SettingRow.Action(Icons.Filled.RestartAlt, "Wyczyść wyuczone reguły", null, chevron = false) { vm.clearRules() },
+                SettingRow.Action(Icons.Filled.Spellcheck, "Wyuczone nazwy produktów: $aliases",
+                    "Twoje poprawki skróconych nazw z paragonów. Dotknij, aby wyczyścić", chevron = false) { vm.clearAliases() },
             ))
 
             GroupLabel("Dane")

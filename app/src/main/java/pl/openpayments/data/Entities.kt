@@ -53,7 +53,20 @@ data class ReceiptItem(
     val name: String,
     val quantity: Double = 1.0,
     val price: Long,
+    /** Nazwa dokładnie tak, jak była na paragonie (do nauki poprawek). */
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val rawName: String? = null,
+    /** Grupa produktu (ProductGroup.name). */
+    @androidx.room.ColumnInfo(defaultValue = "NULL") val productGroup: String? = null,
 )
+
+/** Wyuczona poprawka nazwy produktu: klucz nazwy z paragonu → nazwa nadana przez użytkownika. */
+@Entity(tableName = "product_aliases")
+data class ProductAlias(
+    @PrimaryKey val key: String,
+    val name: String,
+)
+
+data class GroupSum(val productGroup: String?, val total: Long)
 
 @Entity(tableName = "budgets")
 data class Budget(

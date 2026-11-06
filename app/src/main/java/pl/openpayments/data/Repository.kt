@@ -22,6 +22,32 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
     val budgets: Flow<List<Budget>> = db.budgets().observeAll()
     val subscriptions: Flow<List<Subscription>> = db.subscriptions().observeAll()
     val ruleCount: Flow<Int> = db.rules().observeCount()
+    val aliasCount: Flow<Int> = db.aliases().observeCount()
+
+    private suspend fun learnedNames(): Map<String, String> = db.aliases().all().associate { it.key to it.name }
+
+    /** Rozwija skrócone nazwy z paragonu (słownik + wyuczone poprawki) i przypisuje grupy produktów. */
+    suspend fun resolveItems(items: List<pl.openpayments.domain.ReceiptParser.Item>): List<ReceiptItem> {
+        val learned = learnedNames()
+        return items.map { i ->
+            val r = pl.openpayments.domain.ProductDictionary.resolve(i.rawName, learned)
+            ReceiptItem(name = r.name, quantity = i.quantity, price = i.price, rawName = i.rawName, productGroup = r.group.name)
+        }
+    }
+
+    fun productGroups(month: YearMonth): Flow<List<GroupSum>> {
+        val r = month.range()
+        return db.transactions().observeGroups(r.first, r.last)
+    }
+
+    suspend fun clearAliases() = db.aliases().clear()
+
+    /** Pozycje zapisane przed wersją 1.3.0 nie mają grupy — uzupełniamy ją raz, ze słownika. */
+    suspend fun backfillGroups() {
+        db.transactions().itemsWithoutGroup().forEach {
+            db.transactions().setGroup(it.id, pl.openpayments.domain.ProductDictionary.groupOf(it.name).name)
+        }
+    }
 
     suspend fun seedIfEmpty() {
         if (db.categories().count() == 0) db.categories().insertAll(Defaults.categories)
@@ -38,7 +64,17 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
      * zapamiętujemy regułę — następnym razem kategoria przypisze się sama.
      */
     suspend fun saveTransaction(t: Transaction, items: List<ReceiptItem>? = null): Long {
-        val id = db.transactions().saveWithItems(t, items)
+        // Grupa liczona z ostatecznej nazwy; poprawione nazwy zapamiętujemy na kolejne paragony.
+        val withGroups = items?.map { it.copy(productGroup = pl.openpayments.domain.ProductDictionary.groupOf(it.name).name) }
+        withGroups?.forEach { item ->
+            val raw = item.rawName ?: return@forEach
+            val auto = pl.openpayments.domain.ProductDictionary.resolve(raw).name
+            val key = pl.openpayments.domain.ProductDictionary.key(raw)
+            if (key.isNotBlank() && item.name.isNotBlank() && !item.name.equals(auto, ignoreCase = true)) {
+                db.aliases().put(ProductAlias(key, item.name))
+            }
+        }
+        val id = db.transactions().saveWithItems(t, withGroups)
         if (prefs.learnRules && t.categoryId != null) {
             val key = Categorizer.ruleKey(t.merchant)
             if (key != null && suggestCategory(t.merchant) != t.categoryId) {
@@ -80,7 +116,7 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
     suspend fun exportBackup(uri: Uri) = withContext(Dispatchers.IO) {
         val snap = Backup.Snapshot(
             db.categories().all(), db.transactions().all(), db.transactions().allItems(),
-            db.budgets().all(), db.subscriptions().all(), db.rules().all(),
+            db.budgets().all(), db.subscriptions().all(), db.rules().all(), db.aliases().all(),
         )
         ctx.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter().use {
             it.write(Backup.encode(snap, pl.openpayments.BuildConfig.VERSION_NAME))
@@ -100,6 +136,7 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
             db.budgets().insertAll(s.budgets)
             db.subscriptions().insertAll(s.subscriptions)
             db.rules().insertAll(s.rules)
+            db.aliases().insertAll(s.aliases)
         }
         s.transactions.size
     }

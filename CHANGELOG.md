@@ -1,3 +1,12 @@
+## 1.3.0
+
+- Rozwijanie skróconych nazw z paragonów: „SER ZOLT.GOUDA PLAS.150G” → „Ser żółty gouda plastry 150 g”. Słownik kilkuset produktów i skrótów kasowych, z przywracaniem polskich znaków.
+- Aplikacja uczy się z poprawek: popraw nazwę produktu raz, a na kolejnych paragonach rozpozna ją sama.
+- Grupy produktów (nabiał, pieczywo, mięso, warzywa i owoce, chemia, napoje…) i nowa karta „Co jest w koszyku” w statystykach.
+- Mocniejsze odczytywanie paragonów: pozycje rozbite na dwie linie, rabaty i opusty przypisane do produktu, towar na wagę, typowe pomyłki OCR w kwotach i rozbite słowa.
+- Przy sprawdzaniu paragonu widać oryginalny zapis z paragonu i grupę każdej pozycji.
+- Kopia zapasowa obejmuje wyuczone nazwy produktów.
+
 ## 1.2.2
 
 - Zakładki bez dużych nagłówków powtarzających nazwę z paska nawigacji. W górnym pasku zostaje tylko to, co ważne w danej chwili: miesiąc, liczba pozycji z sumą wydatków albo dni do końca miesiąca.
