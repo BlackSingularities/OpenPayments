@@ -1,3 +1,7 @@
+## 1.2.1
+
+- Wydanie porządkowe interfejsu w stylu Androida 16: czytelniejsze ikony kategorii w trybie ciemnym, spokojniejsza siatka wykresu miesięcy, ikona portfela przy budżecie ogólnym.
+
 ## 1.2.0
 
 - Nowy interfejs w stylu Androida 16 (Material 3 Expressive): sprężyste animacje, mocniej zaokrąglone kształty i nowa typografia.
