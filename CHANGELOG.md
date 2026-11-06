@@ -1,3 +1,13 @@
+## 1.4.0
+
+- Skanowanie paragonów z automatycznym kadrowaniem: przycisk „Skanuj paragon” otwiera skaner dokumentów, który sam znajduje krawędzie paragonu, pozwala poprawić narożniki i prostuje perspektywę.
+- Zdjęcia z aparatu i galerii też są przycinane i prostowane przed odczytem: aplikacja wycina paragon z tła (np. z podkładki z napisami), wyrównuje cienie i kontrast, a paragon sfotografowany bokiem obraca.
+- Długie paragony są czytane kawałkami, żeby drobny druk był czytelny. Aplikacja porównuje kilka wariantów odczytu i wybiera ten, w którym suma pozycji zgadza się z sumą paragonu.
+- Lepsze składanie wierszy: nazwa i cena z przekrzywionego zdjęcia nie mieszają się już między wierszami.
+- Paragony z Biedronki: cena po rabacie w osobnej linii, rabat rozbity na dwie linie, zgubiona ilość przed „x”, nazwy pisane łącznie („MullMilchCzek” → „Müller Milch czekolada”, „BułecŚniad” → „Bułeczki śniadaniowe”).
+- Sklep rozpoznawany mimo literówek OCR („Biedronko”) i po nazwie spółki z nagłówka. Suma także wtedy, gdy kwota trafi do następnej linii albo z sumy sprzedaży opodatkowanej.
+- Przycięty i wyprostowany paragon zapisuje się przy transakcji zamiast całego zdjęcia.
+
 ## 1.3.0
 
 - Rozwijanie skróconych nazw z paragonów: „SER ZOLT.GOUDA PLAS.150G” → „Ser żółty gouda plastry 150 g”. Słownik kilkuset produktów i skrótów kasowych, z przywracaniem polskich znaków.

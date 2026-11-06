@@ -1,11 +1,15 @@
 package pl.openpayments.ui.screens
 
-import android.net.Uri
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.IntentSenderRequest
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -17,13 +21,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanning
+import com.google.mlkit.vision.documentscanner.GmsDocumentScannerOptions
+import com.google.mlkit.vision.documentscanner.GmsDocumentScanningResult
 import kotlinx.coroutines.launch
-import pl.openpayments.data.ReceiptItem
 import pl.openpayments.domain.ReceiptParser
 import pl.openpayments.domain.ReceiptScanner
 import pl.openpayments.ui.MainViewModel
@@ -37,25 +45,31 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var processing by remember { mutableStateOf<File?>(null) }
+    var preview by remember { mutableStateOf<ImageBitmap?>(null) }
+    var stage by remember { mutableStateOf("Odczytuję sklep, datę i pozycje…") }
     var error by remember { mutableStateOf<String?>(null) }
     var pendingFile by remember { mutableStateOf<File?>(null) }
 
-    fun process(file: File) {
-        processing = file; error = null
+    fun process(file: File, cropped: Boolean) {
+        processing = file; preview = null; error = null
         scope.launch {
             runCatching {
-                val lines = ReceiptScanner.recognize(ctx, Uri.fromFile(file))
-                val r = ReceiptParser.parse(lines)
+                val out = ReceiptScanner.scan(
+                    ctx, file, alreadyCropped = cropped,
+                    onStage = { s -> scope.launch { stage = s } },
+                    onPreview = { b -> val img = b.asImageBitmap(); scope.launch { preview = img } },
+                )
+                val r = out.result
                 if (r.total == null && r.items.isEmpty()) error("nothing")
                 vm.draft = ReceiptDraft(
                     merchant = r.merchant ?: "", date = r.date, total = r.total,
                     items = vm.repo.resolveItems(r.items),
-                    imagePath = file.absolutePath, consistent = ReceiptParser.isConsistent(r), rawLines = lines,
+                    imagePath = file.absolutePath, consistent = ReceiptParser.isConsistent(r), rawLines = out.lines,
                 )
             }.onSuccess { nav.replaceWithEdit() }
                 .onFailure {
-                    processing = null
-                    error = "Nie udało się odczytać paragonu. Zrób zdjęcie z bliska, przy dobrym świetle, na płaskiej powierzchni."
+                    processing = null; preview = null
+                    error = "Nie udało się odczytać paragonu. Spróbuj „Skanuj paragon” — połóż go płasko na ciemnym tle, przy dobrym świetle."
                     vm.draft = ReceiptDraft("", null, null, emptyList(), file.absolutePath, true, emptyList())
                 }
         }
@@ -63,10 +77,35 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
 
     val camera = rememberLauncherForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val f = pendingFile
-        if (ok && f != null) process(f) else f?.delete()
+        if (ok && f != null) process(f, cropped = false) else f?.delete()
+    }
+    fun launchCamera() {
+        val (f, uri) = vm.repo.newReceiptFile()
+        pendingFile = f; camera.launch(uri)
     }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
-        if (uri != null) scope.launch { process(vm.repo.copyToReceipts(uri)) }
+        if (uri != null) scope.launch { process(vm.repo.copyToReceipts(uri), cropped = false) }
+    }
+    // Skaner dokumentów z Google Play services: sam znajduje krawędzie paragonu, pozwala poprawić
+    // narożniki i oddaje wyprostowane zdjęcie. Działa na urządzeniu, bez wysyłania obrazu.
+    val docScanner = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { res ->
+        if (res.resultCode == Activity.RESULT_OK) {
+            val uri = GmsDocumentScanningResult.fromActivityResultIntent(res.data)?.pages?.firstOrNull()?.imageUri
+            if (uri != null) scope.launch { process(vm.repo.copyToReceipts(uri), cropped = true) }
+        }
+    }
+    fun launchScanner() {
+        val activity = ctx.findActivity()
+        if (activity == null) { launchCamera(); return }
+        val options = GmsDocumentScannerOptions.Builder()
+            .setScannerMode(GmsDocumentScannerOptions.SCANNER_MODE_BASE_WITH_FILTER)
+            .setGalleryImportAllowed(true)
+            .setPageLimit(1)
+            .setResultFormats(GmsDocumentScannerOptions.RESULT_FORMAT_JPEG)
+            .build()
+        GmsDocumentScanning.getClient(options).getStartScanIntent(activity)
+            .addOnSuccessListener { sender -> docScanner.launch(IntentSenderRequest.Builder(sender).build()) }
+            .addOnFailureListener { launchCamera() } // brak Google Play services — zwykły aparat + nasze kadrowanie
     }
 
     Scaffold(
@@ -88,13 +127,15 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
             ) {
                 val f = processing
                 if (f != null) {
-                    AsyncImage(f, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.6f)
+                    val p = preview
+                    if (p != null) Image(p, null, Modifier.fillMaxSize().padding(12.dp), contentScale = ContentScale.Fit, alpha = 0.75f)
+                    else AsyncImage(f, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop, alpha = 0.6f)
                     ScanLine()
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         ContainedLoadingIndicator(Modifier.size(96.dp))
                         Spacer(Modifier.height(12.dp))
                         Surface(shape = MaterialTheme.shapes.medium, color = MaterialTheme.colorScheme.surface) {
-                            Text("Odczytuję sklep, datę i pozycje…", Modifier.padding(12.dp))
+                            Text(stage, Modifier.padding(12.dp))
                         }
                     }
                 } else {
@@ -112,8 +153,8 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
                             textAlign = TextAlign.Center, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(20.dp))
-                        Tip(Icons.Filled.WbSunny, "Dobre, równomierne światło")
-                        Tip(Icons.Filled.CropFree, "Cały paragon w kadrze, prosto")
+                        Tip(Icons.Filled.CropFree, "Krawędzie i perspektywę prostujemy sami")
+                        Tip(Icons.Filled.WbSunny, "Dobre światło, paragon na ciemnym tle")
                         Tip(Icons.Filled.Straighten, "Długi paragon? Wygładź go na stole")
                     }
                 }
@@ -125,21 +166,34 @@ fun ScanScreen(vm: MainViewModel, nav: Nav) {
             }
             Spacer(Modifier.height(16.dp))
             Button(
-                onClick = {
-                    val (f, uri) = vm.repo.newReceiptFile()
-                    pendingFile = f; camera.launch(uri)
-                },
+                onClick = { launchScanner() },
                 enabled = processing == null,
                 modifier = Modifier.fillMaxWidth().height(64.dp), shapes = ButtonDefaults.shapes(),
-            ) { Icon(Icons.Filled.PhotoCamera, null); Spacer(Modifier.width(8.dp)); Text("Zrób zdjęcie") }
+            ) { Icon(Icons.Filled.DocumentScanner, null); Spacer(Modifier.width(8.dp)); Text("Skanuj paragon") }
             Spacer(Modifier.height(10.dp))
-            FilledTonalButton(
-                onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
-                enabled = processing == null,
-                modifier = Modifier.fillMaxWidth().height(64.dp), shapes = ButtonDefaults.shapes(),
-            ) { Icon(Icons.Filled.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Wybierz z galerii") }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                FilledTonalButton(
+                    onClick = { launchCamera() },
+                    enabled = processing == null,
+                    modifier = Modifier.weight(1f).height(56.dp), shapes = ButtonDefaults.shapes(),
+                ) { Icon(Icons.Filled.PhotoCamera, null); Spacer(Modifier.width(8.dp)); Text("Aparat") }
+                FilledTonalButton(
+                    onClick = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
+                    enabled = processing == null,
+                    modifier = Modifier.weight(1f).height(56.dp), shapes = ButtonDefaults.shapes(),
+                ) { Icon(Icons.Filled.PhotoLibrary, null); Spacer(Modifier.width(8.dp)); Text("Galeria") }
+            }
         }
     }
+}
+
+private fun Context.findActivity(): Activity? {
+    var c: Context? = this
+    while (c is ContextWrapper) {
+        if (c is Activity) return c
+        c = c.baseContext
+    }
+    return null
 }
 
 @Composable

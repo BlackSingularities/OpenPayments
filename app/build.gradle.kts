@@ -101,6 +101,8 @@ dependencies {
     implementation("androidx.work:work-runtime-ktx:2.10.5")
     implementation("androidx.biometric:biometric:1.1.0")
     implementation("com.google.mlkit:text-recognition:16.0.1")
+    // Systemowy skaner dokumentów (Google Play services): wykrywanie krawędzi, prostowanie, korekta narożników.
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
     implementation("io.coil-kt:coil-compose:2.7.0")
     debugImplementation("androidx.compose.ui:ui-tooling")

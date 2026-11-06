@@ -47,12 +47,12 @@ object ProductDictionary {
             "feta", "parmezan", "ricotta", "mascarpone", "skyr", "budyń", "deser", "zsiadłe", "homogenizowany"))
         // Pieczywo
         addAll(w(ProductGroup.BREAD, "bułka", "bułki", "kajzerka", "chleb", "bagietka", "rogal", "rogalik", "grahamka",
-            "ciabatta", "tortilla", "pączek", "drożdżówka", "chałka", "pieczywo", "tost", "tostowy", "croissant"))
+            "ciabatta", "tortilla", "bułeczki", "bułeczka", "pączek", "drożdżówka", "chałka", "pieczywo", "tost", "tostowy", "croissant"))
         // Mięso i wędliny
         addAll(w(ProductGroup.MEAT, "kiełbasa", "kiełbaski", "szynka", "parówki", "boczek", "polędwica", "salami",
             "pierś", "filet", "kurczak", "kurczaka", "indyk", "indyka", "schab", "karkówka", "łopatka", "wołowina",
             "wieprzowina", "mięso", "mielone", "kabanosy", "pasztet", "pasztetowa", "kaszanka", "salceson", "udko",
-            "skrzydełka", "żeberka", "wędlina", "baleron", "mortadela", "frankfurterki", "golonka", "wątróbka"))
+            "skrzydełka", "żeberka", "wędlina", "baleron", "mortadela", "frankfurterki", "golonka", "wątróbka", "cheeseburger", "hamburger"))
         // Ryby
         addAll(w(ProductGroup.FISH, "łosoś", "tuńczyk", "śledź", "śledzie", "makrela", "dorsz", "mintaj", "pstrąg",
             "krewetki", "paluszki rybne", "sardynki", "szprot", "ryba"))
@@ -68,7 +68,7 @@ object ProductDictionary {
         addAll(w(ProductGroup.DRY, "makaron", "ryż", "mąka", "kasza", "płatki", "musli", "cukier", "sól", "olej",
             "oliwa", "ocet", "ketchup", "majonez", "musztarda", "kawa", "herbata", "kakao", "przyprawa", "pieprz",
             "sos", "koncentrat", "konserwa", "fasola", "ciecierzyca", "soczewica", "dżem", "miód", "kisiel", "galaretka",
-            "zupa", "bulion", "orzechy", "rodzynki", "drożdże", "proszek do pieczenia", "chrzan", "pesto", "passata"))
+            "zupa", "bulion", "orzechy", "rodzynki", "gnocchi", "kluski", "kopytka", "drożdże", "proszek do pieczenia", "chrzan", "pesto", "passata"))
         // Mrożonki
         addAll(w(ProductGroup.FROZEN, "mrożone", "mrożonka", "pierogi", "pizza", "frytki", "lody"))
         // Napoje
@@ -80,7 +80,7 @@ object ProductDictionary {
         // Słodycze i przekąski
         addAll(w(ProductGroup.SWEETS, "czekolada", "baton", "batonik", "ciastka", "ciasteczka", "wafle", "wafelek",
             "chipsy", "chrupki", "paluszki", "żelki", "cukierki", "lizak", "guma", "krakersy", "precle", "popcorn",
-            "draże", "pianki", "rogaliki", "biszkopty", "sernik", "ciasto", "tort", "pralinki"))
+            "draże", "pianki", "prażynki", "nachosy", "orzeszki", "rogaliki", "biszkopty", "sernik", "ciasto", "tort", "pralinki"))
         // Chemia i higiena
         addAll(w(ProductGroup.HOUSEHOLD, "papier toaletowy", "ręczniki", "ręcznik", "płyn", "proszek", "kapsułki",
             "tabletki", "mydło", "szampon", "odżywka", "pasta", "szczoteczka", "dezodorant", "antyperspirant",
@@ -107,7 +107,7 @@ object ProductDictionary {
             "zwyczajna", "myśliwska", "parzona", "podsuszana", "staropolska", "tradycyjna", "sopocka",
             "łaciate", "kozi", "owczy", "topiony", "pleśniowy", "rolada", "kanapkowy", "sałatkowy",
             "kiszone", "kiszona", "konserwowe", "marynowane", "obrane", "myte", "baby", "cherry", "koktajlowe", "śmietankowy", "kakaowy", "mleczna", "gorzka", "deserowa",
-            "ziemniaczane", "solone", "paprykowe", "zębów", "naczyń", "prania", "toaletowy", "kuchenne", "uniwersalny"))
+            "ziemniaczane", "solone", "paprykowe", "śniadaniowe", "śniadaniowa", "drobiowe", "wieprzowe", "wołowe", "zębów", "naczyń", "prania", "toaletowy", "kuchenne", "uniwersalny"))
     }
 
     /** Skróty, które nie są początkiem słowa (spółgłoskowe, zwyczajowe skróty kas). */
@@ -130,6 +130,11 @@ object ProductDictionary {
         "SZYNK" to "szynka", "KIELB" to "kiełbasa", "PAR" to "parówki", "PAROW" to "parówki",
         "SLEDZ" to "śledź", "LOS" to "łosoś", "TUN" to "tuńczyk", "MAK" to "makaron", "MAKA" to "mąka",
         "KAJZ" to "kajzerka", "BUL" to "bułka", "BAGIET" to "bagietka", "CHL" to "chleb",
+        "HOM" to "homogenizowany", "WYB" to "wybieg", "SNIAD" to "śniadaniowe", "BULEC" to "bułeczki",
+        "CHEESB" to "cheeseburger", "GNO" to "gnocchi", "WIEPR" to "wieprzowe", "KABAN" to "kabanosy",
+        "POLED" to "polędwica", "PARZ" to "parzony", "MIEL" to "mielone", "PRAZ" to "prażynki",
+        "CHIP" to "chipsy", "SMIET" to "śmietana", "SMIETAN" to "śmietana", "TWAR" to "twaróg",
+        "JOG" to "jogurt", "NAP" to "napój", "NEKT" to "nektar", "CZEKOL" to "czekolada",
     )
 
     private val unit = Regex("""^(\d+(?:[.,]\d+)?)(G|GR|KG|ML|L|LTR|SZT|%|X\d+)$""", RegexOption.IGNORE_CASE)
@@ -145,7 +150,29 @@ object ProductDictionary {
 
     private val byKey: Map<String, Word> by lazy { vocabulary.associateBy { it.key } }
 
-    private fun expandToken(token: String): Pair<String, ProductGroup?> {
+    /** Marki i nazwy własne: zostają z wielkiej litery, część ma grupę. */
+    private val brands: Map<String, Pair<String, ProductGroup?>> = mapOf(
+        "MULL" to ("Müller" to ProductGroup.DAIRY), "MULLER" to ("Müller" to ProductGroup.DAIRY),
+        "MILCH" to ("Milch" to null), "DANIO" to ("Danio" to ProductGroup.DAIRY), "ZOTT" to ("Zott" to ProductGroup.DAIRY),
+        "PIATNICA" to ("Piątnica" to ProductGroup.DAIRY), "MLEKOVITA" to ("Mlekovita" to ProductGroup.DAIRY),
+        "LACIATE" to ("Łaciate" to ProductGroup.DAIRY), "HOCHLAND" to ("Hochland" to ProductGroup.DAIRY),
+        "PEPS" to ("Pepsi" to ProductGroup.DRINKS), "PEPSI" to ("Pepsi" to ProductGroup.DRINKS),
+        "COCA" to ("Coca-Cola" to ProductGroup.DRINKS), "FANTA" to ("Fanta" to ProductGroup.DRINKS),
+        "SPRITE" to ("Sprite" to ProductGroup.DRINKS), "TYMBARK" to ("Tymbark" to ProductGroup.DRINKS),
+        "DR" to ("Dr" to null), "PEPP" to ("Pepper" to ProductGroup.DRINKS), "PEPPER" to ("Pepper" to ProductGroup.DRINKS),
+        "LAYS" to ("Lay's" to ProductGroup.SWEETS), "CHEETOS" to ("Cheetos" to ProductGroup.SWEETS),
+        "MILKA" to ("Milka" to ProductGroup.SWEETS), "WEDEL" to ("Wedel" to ProductGroup.SWEETS),
+        "OREO" to ("Oreo" to ProductGroup.SWEETS), "HARIBO" to ("Haribo" to ProductGroup.SWEETS),
+        "UHT" to ("UHT" to null), "XXL" to ("XXL" to null), "BIO" to ("BIO" to null),
+    )
+
+    /** Dwuwyrazowe skróty kas: „W WYB” (jaja z wolnego wybiegu), „B K” (bez kości). */
+    private val phrases: Map<String, String> = mapOf(
+        "W WYB" to "z wolnego wybiegu", "Z WYB" to "z wolnego wybiegu", "B K" to "bez kości", "Z K" to "z kością",
+        "BEZ LAKT" to "bez laktozy", "B LAKT" to "bez laktozy",
+    )
+
+    private fun expandToken(token: String, mixed: Boolean = false): Pair<String, ProductGroup?> {
         val t = strip(token).trimEnd('.')
         if (t.isEmpty()) return "" to null
         unit.matchEntire(t)?.let { m ->
@@ -153,25 +180,55 @@ object ProductDictionary {
             val u = m.groupValues[2].lowercase(PL).let { if (it == "gr") "g" else if (it == "ltr") "l" else it }
             return (if (u == "%") "$n%" else "$n $u") to null
         }
+        val keep = if (mixed) token.trimEnd('.') else token.lowercase(PL)
         if (t.any { it.isDigit() }) return token.lowercase(PL) to null
         byKey[t]?.let { return it.text to it.group }
+        brands[t]?.let { return it }
         abbreviations[t]?.let { full -> return full to byKey[strip(full)]?.group }
-        if (t.length >= 3) {
+        // W nazwach pisanych łącznie („SerSałKanPik”) krótkie kawałki często są skrótami marek — ostrożniej z prefiksem.
+        if (t.length >= (if (mixed) 4 else 3)) {
             vocabulary.firstOrNull { it.key.startsWith(t) && !it.key.contains(' ') }?.let { return it.text to it.group }
         }
-        return token.lowercase(PL) to null
+        return keep to null
     }
+
+    /**
+     * Rozbija nazwy pisane łącznie (Biedronka: „MullMilchCzek400g”, „NaPepsiCreamSo0,33L”)
+     * na słowa: „Mull Milch Czek 400g”. Działa tylko dla zapisu mieszanego — nazwy WIELKIMI
+     * literami zostają bez zmian.
+     */
+    fun splitCamel(s: String): String = s
+        .replace(Regex("""(?<=\p{Ll})(?=\p{Lu}\p{Ll})"""), " ")
+        .replace(Regex("""(?<=\p{Lu})(?=\p{Lu}\p{Ll})"""), " ")
+        .replace(Regex("""(?<=\p{L})(?<!\d[xX])(?=\d)"""), " ")
 
     /** Rozwija nazwę z paragonu do czytelnej postaci i przypisuje grupę. */
     fun resolve(raw: String, learned: Map<String, String> = emptyMap()): Resolved {
         learned[key(raw)]?.let { return Resolved(it, groupOf(it)) }
-        val tokens = raw.replace(Regex("(?<=[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż])\\.(?=\\S)"), ". ")
-            .split(Regex("[\\s/]+")).filter { it.isNotBlank() }
+        val mixed = raw.any { it.isLowerCase() } && raw.count { it.isUpperCase() } >= 2
+        var s = raw.replace(Regex("""[<>|_~^"`]"""), " ").replace(Regex("""(?<=\p{L})-(?=\p{L})"""), " ")
+        if (mixed) s = splitCamel(s)
+        val tokens = s.replace(Regex("(?<=[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż])\.(?=\S)"), ". ")
+            .split(Regex("[\s/]+")).filter { it.isNotBlank() }
             .let(::mergeUnits).let(::mergeSplit)
-        val parts = tokens.map(::expandToken).filter { it.first.isNotBlank() }
-        val name = parts.joinToString(" ") { it.first }.replace(Regex("\\s+"), " ").trim()
+        val parts = mutableListOf<Pair<String, ProductGroup?>>()
+        var i = 0
+        while (i < tokens.size) {
+            val pair = tokens.getOrNull(i + 1)?.let { strip(tokens[i]).trimEnd('.') + " " + strip(it).trimEnd('.') }
+            val phrase = pair?.let { phrases[it] }
+            when {
+                phrase != null -> { parts += phrase to null; i += 2; continue }
+                // „Na”/„N” na początku nazwy pisanej łącznie to napój („NaPepsiCream”, „N DrPepper”)
+                mixed && i == 0 && tokens.size > 1 && strip(tokens[0]).trimEnd('.') in setOf("N", "NA", "NAP") ->
+                    parts += "napój" to ProductGroup.DRINKS
+                else -> parts += expandToken(tokens[i], mixed)
+            }
+            i++
+        }
+        val visible = parts.filter { it.first.isNotBlank() }
+        val name = visible.joinToString(" ") { it.first }.replace(Regex("\s+"), " ").trim()
             .replaceFirstChar { it.titlecase(PL) }
-        val group = parts.firstNotNullOfOrNull { it.second } ?: groupOf(name)
+        val group = visible.firstNotNullOfOrNull { it.second } ?: groupOf(name)
         return Resolved(name.ifBlank { raw }, group)
     }
 
