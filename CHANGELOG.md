@@ -1,3 +1,9 @@
+## 1.4.1
+
+- Poprawka budowania: wersja 1.4.0 nie powstała (błąd kompilacji w CI) – jej zmiany wchodzą w tę wersję.
+- Zgłaszanie błędów i sugestii: nowa pozycja „Zgłoś błąd lub sugestię” – opis trafia prosto do autora przez redzikowski.com, e-mail jest opcjonalny.
+- Po nieoczekiwanym zamknięciu aplikacja przy następnym uruchomieniu proponuje wysłanie raportu o błędzie – tylko za zgodą użytkownika.
+
 ## 1.4.0
 
 - Skanowanie paragonów z automatycznym kadrowaniem: przycisk „Skanuj paragon” otwiera skaner dokumentów, który sam znajduje krawędzie paragonu, pozwala poprawić narożniki i prostuje perspektywę.

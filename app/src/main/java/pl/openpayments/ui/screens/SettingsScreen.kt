@@ -151,6 +151,8 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav, canLock: () -> Boolean) {
             if (vm.updateBusy) LinearWavyProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 8.dp))
 
             GroupLabel("O aplikacji")
+            var feedback by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+            if (feedback) pl.openpayments.feedback.FeedbackDialog(onDismiss = { feedback = false })
             val official = vm.certificate.equals(BuildConfig.RELEASE_CERT_SHA256, true)
             RowsGroup(listOf(
                 SettingRow.Action(Icons.Filled.Info, "Wersja", "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", onClick = null),
@@ -161,6 +163,7 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav, canLock: () -> Boolean) {
                 SettingRow.Action(Icons.Filled.Gavel, "Licencja", "MIT", onClick = null),
                 SettingRow.Action(Icons.Filled.Person, "Pomysł i wykonanie", "Adam Rędzikowski · redzikowski.com") { open("https://redzikowski.com") },
                 SettingRow.Action(Icons.Filled.Email, "Kontakt", "kontakt@redzikowski.com") { open("mailto:kontakt@redzikowski.com") },
+                SettingRow.Action(Icons.Filled.BugReport, pl.openpayments.feedback.FeedbackText.entryTitle, pl.openpayments.feedback.FeedbackText.entrySubtitle) { feedback = true },
                 SettingRow.Action(Icons.Filled.LocalCafe, "Postaw kawę", "Wesprzyj rozwój na buycoffee.to") { open("https://buycoffee.to/adamredzikowski") },
             ))
         }

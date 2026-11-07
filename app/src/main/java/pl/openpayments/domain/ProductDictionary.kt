@@ -208,8 +208,8 @@ object ProductDictionary {
         val mixed = raw.any { it.isLowerCase() } && raw.count { it.isUpperCase() } >= 2
         var s = raw.replace(Regex("""[<>|_~^"`]"""), " ").replace(Regex("""(?<=\p{L})-(?=\p{L})"""), " ")
         if (mixed) s = splitCamel(s)
-        val tokens = s.replace(Regex("(?<=[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż])\.(?=\S)"), ". ")
-            .split(Regex("[\s/]+")).filter { it.isNotBlank() }
+        val tokens = s.replace(Regex("(?<=[A-Za-zĄĆĘŁŃÓŚŹŻąćęłńóśźż])\\.(?=\\S)"), ". ")
+            .split(Regex("[\\s/]+")).filter { it.isNotBlank() }
             .let(::mergeUnits).let(::mergeSplit)
         val parts = mutableListOf<Pair<String, ProductGroup?>>()
         var i = 0
@@ -226,7 +226,7 @@ object ProductDictionary {
             i++
         }
         val visible = parts.filter { it.first.isNotBlank() }
-        val name = visible.joinToString(" ") { it.first }.replace(Regex("\s+"), " ").trim()
+        val name = visible.joinToString(" ") { it.first }.replace(Regex("\\s+"), " ").trim()
             .replaceFirstChar { it.titlecase(PL) }
         val group = visible.firstNotNullOfOrNull { it.second } ?: groupOf(name)
         return Resolved(name.ifBlank { raw }, group)

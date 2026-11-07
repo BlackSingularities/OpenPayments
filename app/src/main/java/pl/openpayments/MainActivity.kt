@@ -1,5 +1,7 @@
 package pl.openpayments
 
+import pl.openpayments.feedback.Feedback
+import pl.openpayments.feedback.CrashReportPrompt
 import android.Manifest
 import android.os.Build
 import android.os.Bundle
@@ -34,6 +36,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Feedback.install(this, "openpayments")
         enableEdgeToEdge()
         locked = repo.prefs.appLock && canAuthenticate()
         if (Build.VERSION.SDK_INT >= 33) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -41,6 +44,7 @@ class MainActivity : FragmentActivity() {
             val theme by vm.theme.collectAsState()
             val dynamic by vm.dynamicColor.collectAsState()
             OpenPaymentsTheme(theme, dynamic) {
+                CrashReportPrompt()
                 if (locked) LockScreen(::authenticate) else AppRoot(vm, ::canAuthenticate)
             }
         }

@@ -253,7 +253,8 @@ object ReceiptParser {
         }
         return clean.take(4).firstOrNull { l ->
             val up = ProductDictionary.strip(l)
-            l.count { it.isLetter() } >= 3 && stopWords.none { up.contains(it) } && !l.any { it.isDigit() }
+            // „Sklep u Ani” to nazwa sklepu – „SKLEP” wyklucza tylko wiersze między pozycjami
+            l.count { it.isLetter() } >= 3 && stopWords.none { it != "SKLEP" && up.contains(it) } && !l.any { it.isDigit() }
         }?.let(::titleCase)
     }
 
