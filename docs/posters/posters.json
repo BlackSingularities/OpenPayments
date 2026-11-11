@@ -1,0 +1,23 @@
+{
+  "slug": "openpayments",
+  "name": "OpenPayments",
+  "label": "budżet domowy · skaner paragonów",
+  "icon": "icon.png",
+  "url": "https://redzikowski.com/portfolio/openpayments",
+  "posters": [
+    {
+      "platform": "android",
+      "file": "android.png",
+      "title": "Widzisz, na co *idą pieniądze*",
+      "lead": "Skanujesz paragon, a aplikacja rozpisuje pozycje, dobiera kategorię i pilnuje budżetów oraz płatności cyklicznych.",
+      "shots": [
+        { "src": "../screenshots/android/01-start.png", "caption": "Miesiąc" },
+        { "src": "../screenshots/android/02-transakcje.png", "caption": "Transakcje" },
+        { "src": "../screenshots/android/03-budzety.png", "caption": "Budżety" },
+        { "src": "../screenshots/android/04-statystyki.png", "caption": "Statystyki" }
+      ],
+      "features": ["skan paragonu offline", "pozycje z paragonu", "kategorie, które się uczą", "ostrzeżenia budżetowe", "płatności cykliczne", "eksport CSV"],
+      "meta": "Android 8 lub nowszy"
+    }
+  ]
+}

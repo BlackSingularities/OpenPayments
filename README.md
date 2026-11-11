@@ -1,5 +1,13 @@
 # OpenPayments — budżet domowy na Androida
 
+<!-- posters:start -->
+<p align="center">
+  <img src="docs/posters/android.png" alt="OpenPayments – Android" width="460">
+</p>
+
+<p align="center"><a href="https://redzikowski.com/portfolio/openpayments">redzikowski.com/portfolio/openpayments</a></p>
+<!-- posters:end -->
+
 Aplikacja do kontroli wydatków inspirowana [Sumply](https://www.sumply.pl/): ręczne wpisy, skanowanie paragonów,
 automatyczna kategoryzacja, budżety z ostrzeżeniami, płatności cykliczne i statystyki. Działa w pełni offline.
 
