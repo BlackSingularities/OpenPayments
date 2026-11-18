@@ -31,6 +31,8 @@ interface TransactionDao {
     suspend fun spent(from: Long, to: Long, cat: Long?): Long
 
     @Insert suspend fun insert(t: Transaction): Long
+    @Insert suspend fun insertMany(t: List<Transaction>): List<Long>
+    @Query("DELETE FROM transactions WHERE id IN (:ids)") suspend fun deleteIds(ids: List<Long>)
     @androidx.room.Update suspend fun update(t: Transaction)
     @Delete suspend fun delete(t: Transaction)
 

@@ -49,6 +49,25 @@ class MainActivity : FragmentActivity() {
             }
         }
         if (locked) authenticate()
+        handleCsv(intent)
+    }
+
+    override fun onNewIntent(intent: android.content.Intent) {
+        super.onNewIntent(intent)
+        handleCsv(intent)
+    }
+
+    /** „Otwórz za pomocą” / „Udostępnij” pliku CSV z historią rachunku. */
+    private fun handleCsv(intent: android.content.Intent?) {
+        val uri = when (intent?.action) {
+            android.content.Intent.ACTION_VIEW -> intent.data
+            android.content.Intent.ACTION_SEND -> androidx.core.content.IntentCompat.getParcelableExtra(
+                intent, android.content.Intent.EXTRA_STREAM, android.net.Uri::class.java,
+            )
+            else -> null
+        } ?: return
+        vm.bankImport.pendingUri = uri
+        setIntent(android.content.Intent(intent).setAction(android.content.Intent.ACTION_MAIN).setData(null))
     }
 
     override fun onStop() {

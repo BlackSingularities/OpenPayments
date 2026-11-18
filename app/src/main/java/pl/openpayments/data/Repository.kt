@@ -215,6 +215,54 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
         f
     }
 
+    // ——— Import historii z banku (CSV) ———
+
+    data class ImportContext(val categories: List<Category>, val rules: List<CategoryRule>, val transactions: List<Transaction>)
+
+    suspend fun importContext() = ImportContext(db.categories().all(), db.rules().all(), db.transactions().all())
+
+    /** Nazwa i zawartość wybranego pliku (do 20 MB). */
+    suspend fun readDocument(uri: Uri): Pair<String, ByteArray> = withContext(Dispatchers.IO) {
+        val name = runCatching {
+            ctx.contentResolver.query(uri, arrayOf(android.provider.OpenableColumns.DISPLAY_NAME), null, null, null)?.use { c ->
+                if (c.moveToFirst()) c.getString(0) else null
+            }
+        }.getOrNull() ?: uri.lastPathSegment?.substringAfterLast('/') ?: "plik.csv"
+        val bytes = ctx.contentResolver.openInputStream(uri)?.use { input ->
+            val out = java.io.ByteArrayOutputStream()
+            val buf = ByteArray(64 * 1024)
+            while (true) {
+                val n = input.read(buf)
+                if (n < 0) break
+                out.write(buf, 0, n)
+                require(out.size() <= 20 * 1024 * 1024) { "Plik jest za duży (ponad 20 MB)" }
+            }
+            out.toByteArray()
+        } ?: error("Nie udało się otworzyć pliku")
+        name to bytes
+    }
+
+    /** Zapis zaimportowanych transakcji jednym ruchem; reguły z poprawek kategorii trafiają do nauki. */
+    suspend fun importTransactions(list: List<Transaction>, learned: List<CategoryRule>): List<Long> {
+        val ids = db.withTransaction {
+            if (prefs.learnRules) learned.forEach { db.rules().put(it) }
+            list.chunked(400).flatMap { db.transactions().insertMany(it) }
+        }
+        checkBudgets(YearMonth.now())
+        return ids
+    }
+
+    suspend fun deleteTransactions(ids: List<Long>) = db.withTransaction {
+        ids.chunked(400).forEach { db.transactions().deleteIds(it) }
+    }
+
+    /** Wzór uniwersalnej tabeli do samodzielnego wypełnienia (Excel, Arkusze Google). */
+    suspend fun writeCsvTemplate(uri: Uri) = withContext(Dispatchers.IO) {
+        ctx.contentResolver.openOutputStream(uri, "wt")!!.bufferedWriter(Charsets.UTF_8).use {
+            it.write(CSV_TEMPLATE)
+        }
+    }
+
     /** Eksport CSV (separator ";" — Excel w polskiej lokalizacji otwiera to poprawnie). */
     suspend fun exportCsv(): Uri = withContext(Dispatchers.IO) {
         val cats = db.categories().all().associateBy { it.id }
@@ -236,6 +284,12 @@ class Repository(private val ctx: Context, private val db: AppDatabase, val pref
     }
 
     companion object {
+        const val CSV_TEMPLATE = "﻿Data;Kwota;Opis;Kontrahent;Kategoria\r\n" +
+            "2026-11-03;-45,20;Zakupy na tydzień;Biedronka;Zakupy spożywcze\r\n" +
+            "2026-11-05;-120,00;Rachunek za prąd;PGE;Rachunki\r\n" +
+            "2026-11-08;-18,50;Kawa z ciastkiem;Kawiarnia Pod Lipą;Restauracje\r\n" +
+            "2026-11-10;5400,00;Wypłata za październik;Pracodawca;Wynagrodzenie\r\n"
+
         fun advance(day: Long, cycle: Cycle): Long {
             val d = day.toDate()
             return when (cycle) {

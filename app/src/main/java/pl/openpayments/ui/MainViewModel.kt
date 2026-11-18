@@ -93,6 +93,14 @@ class MainViewModel(private val app: Application, val repo: Repository) : ViewMo
     fun clearRules() = viewModelScope.launch { repo.clearRules(); snack("Wyczyszczono wyuczone reguły") }
     fun exportCsv(onReady: (Uri) -> Unit) = viewModelScope.launch { onReady(repo.exportCsv()) }
 
+    /** Import historii z banku (CSV). */
+    val bankImport = BankImportController(repo, viewModelScope) { _snack.value = it }
+    fun saveCsvTemplate(uri: Uri) = viewModelScope.launch {
+        runCatching { repo.writeCsvTemplate(uri) }
+            .onSuccess { snack("Zapisano wzór tabeli") }
+            .onFailure { snack("Nie udało się zapisać wzoru: ${it.message}") }
+    }
+
     fun exportBackup(uri: Uri) = viewModelScope.launch {
         runCatching { repo.exportBackup(uri) }
             .onSuccess { snack("Zapisano kopię ($it transakcji)") }

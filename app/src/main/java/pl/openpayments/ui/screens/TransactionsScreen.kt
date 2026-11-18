@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SearchOff
+import androidx.compose.material.icons.filled.UploadFile
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -50,6 +51,9 @@ fun TransactionsScreen(vm: MainViewModel, nav: Nav) {
 
     TabScaffold(
         info = if (filtered.isEmpty()) "Brak pozycji" else "${filtered.size} pozycji · wydatki ${formatMoney(totalOut, true)}",
+        actions = {
+            IconButton(onClick = { nav.bankImport() }) { Icon(Icons.Filled.UploadFile, "Importuj historię z banku") }
+        },
     ) { pad ->
         LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(top = pad.calculateTopPadding(), bottom = 32.dp)) {
             item {

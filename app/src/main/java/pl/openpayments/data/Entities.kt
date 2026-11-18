@@ -16,7 +16,7 @@ data class Category(
     val isIncome: Boolean = false,
 )
 
-enum class TxSource { MANUAL, RECEIPT, RECURRING }
+enum class TxSource { MANUAL, RECEIPT, RECURRING, IMPORT }
 
 @Entity(
     tableName = "transactions",

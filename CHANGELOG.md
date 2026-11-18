@@ -1,3 +1,15 @@
+## 1.5.0
+
+- Import historii z banku z pliku CSV: Ustawienia → „Importuj historię z banku”, ikona na liście transakcji, menu „+” albo „Otwórz za pomocą OpenPayments” w menedżerze plików.
+- Aplikacja sama rozpoznaje bank (mBank, PKO BP, ING, Pekao, Millennium, Santander, Alior, Credit Agricole, Revolut i inne), kodowanie (UTF-8, Windows-1250), separator, wiersz nagłówka wśród danych klienta i podsumowań, format dat i kwot.
+- Rozpoznawanie kolumn po nazwach i po zawartości — działa także dla plików bez nagłówka i dla własnych tabel z Excela: wystarczą data, kwota i opis w dowolnej kolejności. Wzór tabeli do pobrania.
+- Wydatek czy wpływ: ze znaku kwoty, osobnych kolumn obciążeń i uznań, typu operacji, a gdy kwoty są bez znaku — ze zmiany salda.
+- Czytelne nazwy zamiast opisów bankowych: „ZAKUP PRZY UŻYCIU KARTY 4246xx1234 BIEDRONKA 1234 /KRAKOW” → „Biedronka”; bez numerów kart, adresów i form prawnych.
+- Kategorie dobierane z Twoich reguł, kategorii z banku i słownika sieci; poprawka kategorii w podglądzie uczy aplikację na przyszłość.
+- Bez dublowania: wykrywa operacje już wpisane z paragonu lub ręcznie (do 3 dni różnicy) i wcześniejsze importy; pomija przelewy własne, oszczędności, wymianę walut, blokady oraz operacje oczekujące i odrzucone.
+- Podgląd przed zapisem: zmiana roli każdej kolumny, odwrócenie znaków, zaznaczanie pozycji, zmiana nazwy i kategorii. Poprawiony układ kolumn jest zapamiętywany dla kolejnych plików z tego banku.
+- Import można cofnąć jednym dotknięciem; zaimportowane transakcje mają własną ikonę.
+
 ## 1.4.2
 
 - Ikona aplikacji bez tła: na ekranie głównym widać sam kolorowy emblemat, spójnie z trybem „Bez tła” w OpenDesktop.

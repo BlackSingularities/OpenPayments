@@ -41,6 +41,16 @@ class Prefs(ctx: Context) {
         get() = sp.getBoolean("app_lock", false)
         set(v) = sp.edit { putBoolean("app_lock", v) }
 
+    /** Ręcznie poprawione role kolumn importu CSV, zapamiętane dla danego układu pliku. */
+    fun csvMapping(signature: String): List<String>? =
+        sp.getString("csv_map_${signature.hashCode()}", null)?.takeIf { it.substringBefore('\n') == signature }
+            ?.substringAfter('\n')?.split(',')
+
+    fun setCsvMapping(signature: String, roles: List<String>?) = sp.edit {
+        if (roles == null) remove("csv_map_${signature.hashCode()}")
+        else putString("csv_map_${signature.hashCode()}", signature + "\n" + roles.joinToString(","))
+    }
+
     fun alertLevel(key: String) = sp.getInt(key, 0)
     fun setAlertLevel(key: String, v: Int) = sp.edit { putInt(key, v) }
 }

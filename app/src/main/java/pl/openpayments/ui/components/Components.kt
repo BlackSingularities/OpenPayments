@@ -275,6 +275,7 @@ fun TransactionItem(t: Transaction, category: Category?, shapes: ListItemShapes,
                 when (t.source) {
                     TxSource.RECEIPT -> SourceIcon(Icons.AutoMirrored.Filled.ReceiptLong)
                     TxSource.RECURRING -> SourceIcon(Icons.Filled.Autorenew)
+                    TxSource.IMPORT -> SourceIcon(Icons.Filled.AccountBalance)
                     else -> {}
                 }
             }

@@ -26,6 +26,7 @@ automatyczna kategoryzacja, budżety z ostrzeżeniami, płatności cykliczne i s
 | Ranking produktów z paragonów | `StatsScreen`, zapytanie `observeProducts` |
 | Automatyczne aktualizacje przez redzikowski.com | `update/Updates.kt` |
 | Rozwijanie skrótów z paragonów, polskie znaki, grupy produktów, nauka z poprawek | `ProductDictionary`, tabela `product_aliases` |
+| Import historii z banku (CSV): rozpoznanie banku, kolumn, kodowania, dat i kwot, czyszczenie nazw, duplikaty z paragonami, własne tabele | `domain/bank/` (`BankStatement`, `MerchantName`, `ImportPlanner`), `ImportScreen` |
 
 Poza zakresem (wymaga serwera albo oficjalnych API sieci handlowych): integracje z Lidl Plus/Biedronką/Żabką
 oraz budżet współdzielony między kontami.
@@ -40,7 +41,7 @@ oraz budżet współdzielony między kontami.
 ```
 app/src/main/java/pl/openpayments/
 ├── data/      encje, DAO, baza, repozytorium, ustawienia
-├── domain/    parser paragonów, OCR, kategoryzacja, formatowanie kwot
+├── domain/    parser paragonów, OCR, kategoryzacja, formatowanie kwot, import CSV z banku (bank/)
 ├── notify/    kanały powiadomień, dzienny worker
 ├── update/    aktualizator (SHA-256 + weryfikacja certyfikatu)
 └── ui/        motyw, komponenty, wykresy, ekrany

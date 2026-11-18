@@ -90,6 +90,10 @@ fun HomeScreen(vm: MainViewModel, nav: Nav) {
                     onClick = { fabOpen = false; nav.edit(income = true) },
                     icon = { Icon(Icons.Filled.Add, null) }, text = { Text("Dodaj przychód") },
                 )
+                FloatingActionButtonMenuItem(
+                    onClick = { fabOpen = false; nav.bankImport() },
+                    icon = { Icon(Icons.Filled.AccountBalance, null) }, text = { Text("Import z banku") },
+                )
             }
         },
     ) { pad ->

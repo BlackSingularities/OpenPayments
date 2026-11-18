@@ -54,6 +54,7 @@ class Nav(private val c: androidx.navigation.NavHostController) {
     fun scan() = c.navigate("scan")
     fun settings() = c.navigate("settings")
     fun categories() = c.navigate("categories")
+    fun bankImport() = c.navigate("import") { launchSingleTop = true }
     fun tab(route: String) = c.navigate(route) {
         popUpTo(c.graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true; restoreState = true
@@ -79,6 +80,9 @@ fun AppRoot(vm: MainViewModel, canLock: () -> Boolean) {
         }
     }
     if (vm.showUpdateDialog && vm.release != null) UpdateDialog(vm)
+    // Plik CSV otwarty z menedżera plików lub udostępniony z innej aplikacji.
+    val pendingCsv = vm.bankImport.pendingUri
+    LaunchedEffect(pendingCsv) { if (pendingCsv != null) nav.bankImport() }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackHost) },
@@ -121,6 +125,7 @@ fun AppRoot(vm: MainViewModel, canLock: () -> Boolean) {
                     { slideOutHorizontally { it / 3 } + fadeOut() }
                 composable("settings", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { SettingsScreen(vm, nav, canLock) }
                 composable("categories", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { CategoriesScreen(vm, nav) }
+                composable("import", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { ImportScreen(vm, nav) }
                 composable("scan", enterTransition = { slideIn() }, popExitTransition = { slideOut() }) { ScanScreen(vm, nav) }
                 composable(
                     "edit/{id}?receipt={receipt}&income={income}",

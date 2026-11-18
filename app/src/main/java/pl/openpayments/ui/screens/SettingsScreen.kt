@@ -121,6 +121,9 @@ fun SettingsScreen(vm: MainViewModel, nav: Nav, canLock: () -> Boolean) {
 
             GroupLabel("Dane")
             RowsGroup(listOf(
+                SettingRow.Action(Icons.Filled.AccountBalance, "Importuj historię z banku", "Plik CSV z mBanku, PKO, ING, Revoluta i innych — albo własna tabela") {
+                    nav.bankImport()
+                },
                 SettingRow.Action(Icons.Filled.Backup, "Utwórz kopię zapasową", "Plik JSON z całą historią (bez zdjęć paragonów)") {
                     saveBackup.launch("openpayments-${java.time.LocalDate.now()}.json")
                 },
